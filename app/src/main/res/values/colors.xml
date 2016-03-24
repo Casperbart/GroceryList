@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/md_cyan_700</color>
+    <color name="colorPrimaryDark">@color/md_cyan_900</color>
+    <color name="colorBackgroundAccent">@color/md_white_1000</color>
+    <color name="colorPrimaryBackground">@color/md_white_1000</color>
+    <color name="colorSeparatorPrimary">@color/md_grey_100</color>
+    <color name="colorPrimaryText">@color/md_cyan_900</color>
+    <color name="colorSecondayText">@color/md_cyan_700</color>
+    <color name="colorToolbarPrimaryText">@color/md_white_1000</color>
+    <color name="colorToolbarSecondayText">@color/md_white_1000</color>
+    <color name="colorMarked">@color/md_grey_500</color>
+</resources>

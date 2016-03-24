@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimaryBackground"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/viewSeparatorTop"
+        android:layout_width="fill_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/colorSeparatorPrimary" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textViewFriendPrimary"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_toLeftOf="@+id/imageButtonRemoveFriend"
+            android:layout_toStartOf="@+id/imageButtonRemoveFriend"
+            android:gravity="center_vertical"
+            android:paddingEnd="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/friend_text_placeholder"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="@dimen/friendPrimaryText" />
+
+        <TextView
+            android:id="@+id/textViewFriendSecondary"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_below="@id/textViewFriendPrimary"
+            android:layout_toLeftOf="@+id/imageButtonRemoveFriend"
+            android:layout_toStartOf="@+id/imageButtonRemoveFriend"
+            android:gravity="center_vertical"
+            android:paddingEnd="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/friend_text_secondary_placeholder"
+            android:textColor="@color/colorSecondayText"
+            android:textSize="@dimen/friendSecondaryText" />
+
+
+        <ImageButton
+            android:id="@+id/imageButtonRemoveFriend"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="@color/md_white_1000"
+            android:contentDescription="@string/remove_friend_button_description"
+            android:src="@android:drawable/ic_delete" />
+
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/viewSeparatorBottom"
+        android:layout_width="fill_parent"
+        android:layout_height="0.2dp"
+        android:background="@color/colorSeparatorPrimary"
+        android:visibility="visible" />
+
+</LinearLayout>
