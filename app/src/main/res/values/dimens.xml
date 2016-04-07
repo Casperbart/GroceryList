@@ -4,8 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
 
-    <dimen name="shortDropDown">175dp</dimen>
-    <dimen name="tallDropDown">425dp</dimen>
     <dimen name="warePrimaryText">20sp</dimen>
     <dimen name="friendPrimaryText">18sp</dimen>
     <dimen name="friendSecondaryText">14sp</dimen>
@@ -14,6 +12,16 @@
     <dimen name="dialogTextSize">22sp</dimen>
     <dimen name="loginscreentitle">26sp</dimen>
     <dimen name="loginscreenlabels">18dp</dimen>
+
+
+    <!-- Dimensions related to autocomplete dropdown -->
+    <dimen name="shortDropDown">175dp</dimen>
+    <dimen name="tallDropDown">425dp</dimen>
     <dimen name="dropDownItemHeight">34dp</dimen>
     <dimen name="dropDownTextSize">20sp</dimen>
+
+    <!-- Dimensions related to popup picker -->
+    <dimen name="popupPickedHeight">300dp</dimen>
+    <dimen name="popupPickedWidth">120dp</dimen>
+
 </resources>

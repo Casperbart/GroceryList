@@ -3,13 +3,12 @@ package com.printz.guano.shoppingassistant.edit_list;
 
 import android.app.LoaderManager;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -20,7 +19,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -28,9 +27,9 @@ import com.printz.guano.shoppingassistant.AutoCompleteListAdapter;
 import com.printz.guano.shoppingassistant.BaseActivity;
 import com.printz.guano.shoppingassistant.DefaultTopAutoCompleteTextView;
 import com.printz.guano.shoppingassistant.R;
-import com.printz.guano.shoppingassistant.WareHistory;
-import com.printz.guano.shoppingassistant.WareHistoryContract;
-import com.printz.guano.shoppingassistant.WareHistoryLoader;
+import com.printz.guano.shoppingassistant.UserSession;
+import com.printz.guano.shoppingassistant.database.DatabaseLib;
+import com.printz.guano.shoppingassistant.database.WareHistoryContract;
 import com.printz.guano.shoppingassistant.login.LoginActivity;
 import com.printz.guano.shoppingassistant.share_list.ShareActivity;
 
@@ -39,17 +38,24 @@ import java.util.Collections;
 import java.util.List;
 
 public class ShoppingListActivity extends BaseActivity
-        implements ShoppingListDialogListener, LoaderManager.LoaderCallbacks<List<WareHistory>> {
+        implements ShoppingListDialogListener, UserSession.SessionChangedListener {
 
     private final static String LOG_TAG = ShoppingListActivity.class.getSimpleName();
-    private final static int LOADER_ID = 1;
+
     private ArrayList<WareHistory> mWareHistories;
-    private ListView mShoppingListView;
-    private AutoCompleteTextView mAutoCompleteTextView;
+    private DefaultTopAutoCompleteTextView mAutoCompleteTextView;
+    private Button mCloseDropdownButton;
     private AutoCompleteListAdapter mAutoCompleteAdapter;
-    private ShoppingListAdapter mShoppingListAdapter;
+    private WareListAdapter mShoppingListAdapter;
     private FragmentManager mFragmentManager;
     private ContentResolver mContentResolver;
+    private DatabaseLib mDatabaseLib;
+
+    /**
+     * Call back LoaderManagers to handle loading of WareHistory's and Ware's
+     */
+    private LoaderManager.LoaderCallbacks<List<WareHistory>> mWareHistoryLoaderListener;
+    private LoaderManager.LoaderCallbacks<List<Ware>> mWareLoaderListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,31 +64,49 @@ public class ShoppingListActivity extends BaseActivity
         setContentView(R.layout.activity_list);
         activateToolbar();
 
+        UserSession.initializeUserSession(this);
+//        ListerDatabase.deleteDatabase(this);
+
         mFragmentManager = getSupportFragmentManager();
         mContentResolver = getContentResolver();
-//        mShoppingListView = (ListView) findViewById(R.id.listViewWares);
-//        mShoppingListAdapter = new ShoppingListAdapter(this, new ArrayList<Ware>(), mShoppingListView);
+        mDatabaseLib = new DatabaseLib(mContentResolver);
+        ListView mWareListView = (ListView) findViewById(R.id.listViewWares);
+        mShoppingListAdapter = new WareListAdapter(this);
 
         mAutoCompleteTextView = (DefaultTopAutoCompleteTextView) findViewById(R.id.autoCompleteAddWare);
+        mCloseDropdownButton = (Button) findViewById(R.id.buttonCloseDropDown);
 
         mAutoCompleteAdapter = new AutoCompleteListAdapter(
                 this, R.layout.item_dropdown, new ArrayList<String>()
         );
 
-//        mShoppingListView.setAdapter(mShoppingListAdapter);
+        mWareListView.setAdapter(mShoppingListAdapter);
         mAutoCompleteTextView.setAdapter(mAutoCompleteAdapter);
+        mAutoCompleteTextView.setThreshold(1);
+
+        mCloseDropdownButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mAutoCompleteTextView.isPopupShowing()) {
+                    mAutoCompleteTextView.dismissDropDown();
+                } else {
+                    mAutoCompleteTextView.clearFocus();
+                }
+            }
+        });
 
         mAutoCompleteTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    Log.d(LOG_TAG, "Auto complete has focus");
-                    mAutoCompleteTextView.showDropDown();
+                    mCloseDropdownButton.setVisibility(View.VISIBLE);
+                    if (mAutoCompleteTextView.enoughToFilter()) {
+                        mAutoCompleteTextView.showDropDown();
+                    }
                 } else {
-                    Log.d(LOG_TAG, "Auto complete lost focus");
+                    mCloseDropdownButton.setVisibility(View.GONE);
                     InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    mAutoCompleteTextView.dismissDropDown();
                 }
             }
         });
@@ -101,7 +125,6 @@ public class ShoppingListActivity extends BaseActivity
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
-                // hitting green checkmark button on keyboard
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
                     handled = true;
                     String wareName = mAutoCompleteTextView.getText().toString();
@@ -113,48 +136,75 @@ public class ShoppingListActivity extends BaseActivity
             }
         });
 
+        setupLoaderListeners();
+
         if (savedInstanceState == null) {
-            PopulateWareAutoComplete();
+            loadApplicationData();
         }
     }
 
-    private void PopulateWareAutoComplete() {
-        Log.d(LOG_TAG, "Populating autocomplete");
-        getLoaderManager().initLoader(LOADER_ID, null, this);
+    private void setupLoaderListeners() {
+        mWareHistoryLoaderListener = new LoaderManager.LoaderCallbacks<List<WareHistory>>() {
+            @Override
+            public Loader<List<WareHistory>> onCreateLoader(int id, Bundle args) {
+                Context context = getBaseContext();
+                Log.d(LOG_TAG, "Creating ware history loader");
+                return new WareHistoryLoader(context, mContentResolver);
+            }
+
+            @Override
+            public void onLoadFinished(Loader<List<WareHistory>> loader, List<WareHistory> wareHistories) {
+                Log.d(LOG_TAG, "Finished loading ware history");
+                addNamesToWareAutoComplete(wareHistories);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<List<WareHistory>> loader) {
+
+            }
+        };
+
+        mWareLoaderListener = new LoaderManager.LoaderCallbacks<List<Ware>>() {
+            @Override
+            public Loader<List<Ware>> onCreateLoader(int id, Bundle args) {
+                Context context = getBaseContext();
+                Log.d(LOG_TAG, "Creating ware loader");
+                return new WareLoader(context, mContentResolver);
+            }
+
+            @Override
+            public void onLoadFinished(Loader<List<Ware>> loader, List<Ware> wares) {
+                Log.d(LOG_TAG, "Finished loading wares");
+                Collections.sort(wares); // sorts to maintain position of wares in listview
+                mShoppingListAdapter.setWares(wares);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<List<Ware>> loader) {
+
+            }
+        };
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        Log.d(LOG_TAG, "I am now saving state");
-        ArrayList<Ware> wares = mShoppingListAdapter.getValues();
-        outState.putParcelableArrayList("wares", wares);
-        outState.putParcelableArrayList("wareHistories", mWareHistories);
-        super.onSaveInstanceState(outState);
+    private boolean isValidName(String wareName) {
+        return wareName.length() != 0;
     }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d(LOG_TAG, "I am now restoring state");
-        ArrayList<Ware> savedWares = savedInstanceState.getParcelableArrayList("wares");
-        mShoppingListAdapter.setData(savedWares);
-        ArrayList<WareHistory> savedWareHistories = savedInstanceState.getParcelableArrayList("wareHistories");
-        addNamesToWareAutoComplete(savedWareHistories);
-        super.onRestoreInstanceState(savedInstanceState);
+    private void loadApplicationData() {
+        Log.d(LOG_TAG, "Loading application data");
+        getLoaderManager().initLoader(WareHistoryLoader.LOADER_ID, null, mWareHistoryLoaderListener);
+        getLoaderManager().initLoader(WareLoader.LOADER_ID, null, mWareLoaderListener);
     }
 
-    @Override
-    public Loader<List<WareHistory>> onCreateLoader(int id, Bundle args) {
-        return new WareHistoryLoader(this, mContentResolver);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<WareHistory>> loader, List<WareHistory> wareHistories) {
-        addNamesToWareAutoComplete(wareHistories);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<List<WareHistory>> loader) {
-
+    /**
+     * This method restarts the Ware and WareHistory loader.. This is required when the managed data changes.
+     * The managed data changes whenever onSessionChanged is triggered, that is whenever a user
+     * logs in or out.
+     */
+    private void reloadApplicationData() {
+        Log.d(LOG_TAG, "Reloading application data");
+        getLoaderManager().restartLoader(WareHistoryLoader.LOADER_ID, null, mWareHistoryLoaderListener);
+        getLoaderManager().restartLoader(WareLoader.LOADER_ID, null, mWareLoaderListener);
     }
 
     private void addNamesToWareAutoComplete(List<WareHistory> wareHistories) {
@@ -170,13 +220,48 @@ public class ShoppingListActivity extends BaseActivity
         mAutoCompleteAdapter.setData(wareNames);
     }
 
-    private void addWare(String wareName) {
-        Ware ware = new Ware(wareName);
-        int index = mShoppingListAdapter.getLastMarked();
-        mShoppingListAdapter.insertAboveMarked(ware, index);
+    /**
+     * Invalidate menu and load new user data
+     */
+    @Override
+    public void onSessionChanged() {
+        Log.d(LOG_TAG, "Session changed");
+        reloadApplicationData();
+        setActivityTitle();
         mAutoCompleteTextView.setText("");
+        invalidateOptionsMenu();
+    }
 
-        insertWareIntoHistory(wareName);
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Log.d(LOG_TAG, "Saving activity state");
+        ArrayList<Ware> wares = mShoppingListAdapter.getWares();
+        outState.putParcelableArrayList("wares", wares);
+        outState.putParcelableArrayList("wareHistories", mWareHistories);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        Log.d(LOG_TAG, "Restoring activity state");
+
+        ArrayList<Ware> savedWares = savedInstanceState.getParcelableArrayList("wares");
+        mShoppingListAdapter.setWares(savedWares);
+        ArrayList<WareHistory> savedWareHistories = savedInstanceState.getParcelableArrayList("wareHistories");
+        addNamesToWareAutoComplete(savedWareHistories);
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+
+    /**
+     * Adds ware to shopping list adapter as well as the ware history.
+     * @param wareName The name of the ware to insert
+     */
+    private void addWare(String wareName) {
+        Ware ware = new Ware(0, wareName, 0, false, "not set", "not set");
+        mShoppingListAdapter.insertWare(ware);
+        addHistory(wareName);
+        mAutoCompleteTextView.setText("");
     }
 
     /**
@@ -186,7 +271,26 @@ public class ShoppingListActivity extends BaseActivity
      *
      * @param wareName name of ware
      */
-    private void insertWareIntoHistory(String wareName) {
+    private void addHistory(String wareName) {
+        WareHistory wareHistory = isExistingWareHistory(wareName);
+
+        if (wareHistory == null) { // first time this ware is added
+            Uri returnedUri = mDatabaseLib.insertWareHistory(wareName);
+            addToExistingWareHistories(wareName, returnedUri);
+        } else {
+            int count = updateExistingWareHistories(wareHistory);
+            mDatabaseLib.updateWareHistory(wareHistory.getId(), count + 1);
+        }
+    }
+
+    /**
+     * Checks and returns the WareHistory if it exists and null if it does not
+     *
+     * @param wareName The name of the ware to check if it already exists
+     * @return The WareHistory if it exists, and null if it does not
+     */
+    @Nullable
+    private WareHistory isExistingWareHistory(String wareName) {
         WareHistory wareHistory = null;
 
         for (WareHistory wHistory : mWareHistories) {
@@ -195,27 +299,7 @@ public class ShoppingListActivity extends BaseActivity
                 break;
             }
         }
-
-        if (wareHistory == null) {
-            Uri returnedUri = insertWareHistoryIntoDatabase(wareName);
-            addToExistingWareHistories(wareName, returnedUri);
-        } else {
-            int count = updateExistingWareHistories(wareHistory);
-            updateWareHistoryInDatabase(count, wareHistory.getId());
-        }
-    }
-
-    /**
-     * Inserts a new WareHistory into the database.
-     *
-     * @param wareName name of ware
-     * @return the uri of the new inserted WareHistory row
-     */
-    private Uri insertWareHistoryIntoDatabase(String wareName) {
-        ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME, wareName);
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, 1);
-        return mContentResolver.insert(WareHistoryContract.TABLE_URI, values);
+        return wareHistory;
     }
 
     /**
@@ -246,27 +330,25 @@ public class ShoppingListActivity extends BaseActivity
         return count;
     }
 
-    /**
-     * Updates the WareHistory in the database with a +1 count
-     *
-     * @param count the count to update the ware in the database with
-     * @param id    the id to construct the warehistory Uri
-     */
-    private void updateWareHistoryInDatabase(int count, int id) {
-        Uri uri = WareHistoryContract.WareHistory.buildWareHistoryUri(String.valueOf(id));
-        ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, count + 1);
-        mContentResolver.update(uri, values, null, null);
-    }
-
-    private boolean isValidName(String wareName) {
-        return wareName.length() != 0;
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.menu_main, menu);
+        MenuItem share = menu.findItem(R.id.action_share);
+        MenuItem loginSignUp = menu.findItem(R.id.action_login_signup);
+        MenuItem logout = menu.findItem(R.id.action_logout);
+
+        UserSession userSession = UserSession.getUserSession();
+        if (userSession.isSessionActive()) {
+            share.setVisible(true);
+            loginSignUp.setVisible(false);
+            logout.setVisible(true);
+        } else {
+            share.setVisible(false);
+            loginSignUp.setVisible(true);
+            logout.setVisible(false);
+        }
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -274,7 +356,7 @@ public class ShoppingListActivity extends BaseActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_share:
-                Log.d(LOG_TAG, "starting share activity");
+                Log.d(LOG_TAG, "Starting share activity");
                 Intent intentShare = new Intent(ShoppingListActivity.this, ShareActivity.class);
                 startActivity(intentShare);
                 break;
@@ -293,17 +375,18 @@ public class ShoppingListActivity extends BaseActivity
                 dialogDeleteMarked.show(mFragmentManager, "delete-all-marked");
                 break;
             case R.id.action_login_signup:
+                Log.d(LOG_TAG, "Starting Login activity");
                 Intent intentLogin = new Intent(ShoppingListActivity.this, LoginActivity.class);
                 startActivity(intentLogin);
+                break;
+            case R.id.action_logout:
+                Log.d(LOG_TAG, "Logged out of session");
+                UserSession userSession = UserSession.getUserSession();
+                userSession.clearSession();
                 break;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
-        Log.d(LOG_TAG, "Im am now restoring persistance state");
     }
 
     @Override
@@ -327,6 +410,7 @@ public class ShoppingListActivity extends BaseActivity
     @Override
     protected void onResume() {
         Log.d(LOG_TAG, "I am now resumed");
+        setActivityTitle();
         super.onResume();
     }
 
@@ -342,17 +426,35 @@ public class ShoppingListActivity extends BaseActivity
         super.onRestart();
     }
 
+    /**
+     * Sets the title of the activity. The user name is added to the
+     * title if a user is logged in.
+     */
+    private void setActivityTitle() {
+        UserSession userSession = UserSession.getUserSession();
+        String activityTitle = "Shopping List";
+
+        if(userSession.isSessionActive()) {
+            String userName = userSession.getUserName();
+            activityTitle = userName + "'s " + activityTitle;
+        }
+
+        setTitle(activityTitle);
+    }
+
     @Override
-    public void onDialogFinishes(final String DIALOG_TYPE, final boolean RESPONSE) {
+    public void onDialogFinishes(final String DIALOG_TYPE, final boolean ANSWER) {
         switch (DIALOG_TYPE) {
             case ShoppingListDialog.DELETE_ALL_WARES:
-                if (RESPONSE) {
-                    mShoppingListAdapter.setData(null);
+                if (ANSWER) {
+                    int deleteCount = mShoppingListAdapter.deleteAllWares();
+                    Log.d(LOG_TAG, "Deleted " + deleteCount + " wares");
                 }
                 break;
             case ShoppingListDialog.DELETE_ALL_MARKED:
-                if (RESPONSE) {
-                    mShoppingListAdapter.deleteMarkedWares();
+                if (ANSWER) {
+                    int deleteCount = mShoppingListAdapter.deleteMarkedWares();
+                    Log.d(LOG_TAG, "Deleted " + deleteCount + " marked wares");
                 }
                 break;
             default:

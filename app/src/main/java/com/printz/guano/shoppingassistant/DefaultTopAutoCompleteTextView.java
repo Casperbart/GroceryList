@@ -9,9 +9,7 @@ import android.widget.AutoCompleteTextView;
 
 public class DefaultTopAutoCompleteTextView extends AutoCompleteTextView {
 
-    private int shortHeight = (int) getResources().getDimension(R.dimen.shortDropDown);
-    private int tallHeight = (int) getResources().getDimension(R.dimen.tallDropDown);
-    private int filterCount;
+    private final static String LOG_TAG = DefaultTopAutoCompleteTextView.class.getSimpleName();
 
     public DefaultTopAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -25,15 +23,19 @@ public class DefaultTopAutoCompleteTextView extends AutoCompleteTextView {
         super(context);
     }
 
+
+
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        Log.d(LOG_TAG, "Key pre ime triggered");
         boolean handled = false;
-        Log.d("tag", "keypreime triggered");
-        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN && hasFocus()) {
-            InputMethodManager inputManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (inputManager.hideSoftInputFromWindow(findFocus().getWindowToken(),
-                    InputMethodManager.HIDE_NOT_ALWAYS)) {
-                handled = true;
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+            if(isPopupShowing()) {
+                InputMethodManager inputManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (inputManager.hideSoftInputFromWindow(findFocus().getWindowToken(),
+                        InputMethodManager.HIDE_NOT_ALWAYS)) {
+                    handled = true;
+                }
             }
         }
 

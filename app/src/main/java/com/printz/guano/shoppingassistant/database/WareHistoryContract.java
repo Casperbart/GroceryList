@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant;
+package com.printz.guano.shoppingassistant.database;
 
 import android.net.Uri;
 import android.provider.BaseColumns;
@@ -6,12 +6,13 @@ import android.provider.BaseColumns;
 public class WareHistoryContract {
 
     public interface WareHistoryColumns {
-        String WARE_HISTORY_ID = "_id";
-        String WARE_HISTORY_NAME = "ware_history_name";
-        String WARE_HISTORY_COUNT = "ware_history_count";
+        String H_ID = "hId";
+        String WARE_HISTORY_NAME = "name";
+        String WARE_HISTORY_COUNT = "count";
+        String USER_ID = "user_id";
     }
 
-    public static final String CONTENT_AUTHORITY = "com.printz.guano.shoppingassistant.provider";
+    public static final String CONTENT_AUTHORITY = "com.printz.guano.shoppingassistant.wareHistoryProvider";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     private static final String PATH_WARE_HISTORY = "ware_histories";

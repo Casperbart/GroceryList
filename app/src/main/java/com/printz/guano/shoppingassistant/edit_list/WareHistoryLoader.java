@@ -1,11 +1,13 @@
-package com.printz.guano.shoppingassistant;
+package com.printz.guano.shoppingassistant.edit_list;
 
 import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.provider.BaseColumns;
 import android.util.Log;
+
+import com.printz.guano.shoppingassistant.UserSession;
+import com.printz.guano.shoppingassistant.database.WareHistoryContract;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.List;
 public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
 
     private final static String LOG_TAG = WareHistoryLoader.class.getSimpleName();
+    public static final int LOADER_ID = 1;
+
     private List<WareHistory> mWareHistories;
     private ContentResolver mContentResolver;
     private Cursor mCursor;
@@ -24,19 +28,34 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
 
     @Override
     public List<WareHistory> loadInBackground() {
+//        android.os.Debug.waitForDebugger();
+        List<WareHistory> entries = new ArrayList<>();
+
         String[] projection = {
-                BaseColumns._ID,
+                WareHistoryContract.WareHistoryColumns.H_ID,
                 WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME,
                 WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT
         };
-        List<WareHistory> entries = new ArrayList<>();
 
-        mCursor = mContentResolver.query(WareHistoryContract.TABLE_URI, projection, null, null, null);
+        String selection = WareHistoryContract.WareHistoryColumns.USER_ID + "=?";
 
-        if(mCursor != null) {
-            if(mCursor.moveToFirst()) {
+        String userId = "1"; // default user
+
+        UserSession userSession = UserSession.getUserSession();
+        if (userSession.isSessionActive()) {
+            userId = userSession.getUserId();
+        }
+
+        String[] selectionArgs = {
+                userId
+        };
+
+        mCursor = mContentResolver.query(WareHistoryContract.TABLE_URI, projection, selection, selectionArgs, null);
+
+        if (mCursor != null) {
+            if (mCursor.moveToFirst()) {
                 do {
-                    int id = mCursor.getInt(mCursor.getColumnIndex(BaseColumns._ID));
+                    int id = mCursor.getInt(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.H_ID));
                     String name = mCursor.getString(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME));
                     int count = mCursor.getInt(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT));
                     WareHistory wareHistory = new WareHistory(id, name, count);
@@ -56,16 +75,16 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
             }
         }
 
-        List<WareHistory> oldWaryHistories = mWareHistories;
+        List<WareHistory> oldWareHistories = mWareHistories;
         if (wareHistories == null || wareHistories.size() == 0) {
-            Log.d(LOG_TAG, "+++++++++ No Data returned");
+            Log.d(LOG_TAG, "+++ No histories returned +++");
         }
 
         mWareHistories = wareHistories;
         if (isStarted()) {
             super.deliverResult(wareHistories);
         }
-        if (oldWaryHistories != null && oldWaryHistories != wareHistories) {
+        if (oldWareHistories != null && oldWareHistories != wareHistories) {
             mCursor.close();
         }
     }
@@ -77,7 +96,7 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
             deliverResult(mWareHistories);
         }
 
-        if (takeContentChanged() | mWareHistories == null) {
+        if (takeContentChanged() || mWareHistories == null) {
             forceLoad();
         }
     }

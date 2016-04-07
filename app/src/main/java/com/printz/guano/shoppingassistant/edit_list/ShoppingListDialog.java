@@ -18,7 +18,7 @@ public class ShoppingListDialog extends DialogFragment {
     private static final String LOG_TAG = ShoppingListDialog.class.getSimpleName();
     private LayoutInflater mLayoutInflater;
     public static final String DIALOG_TYPE = "dialogType";
-    public static final String DELETE_ALL_WARES = "deleteAllWares";
+    public static final String DELETE_ALL_WARES = "deleteWares";
     public static final String DELETE_ALL_MARKED = "deleteAllMarked";
 
     @Override

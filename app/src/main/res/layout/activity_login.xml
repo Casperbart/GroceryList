@@ -42,7 +42,7 @@
 
 
         <LinearLayout
-            android:id="@+id/email_login_form"
+            android:id="@+id/username_login_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/textViewTitleLogin"
@@ -52,12 +52,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/login_useremail_text"
+                android:text="@string/login_username_text"
                 android:textColor="@color/md_grey_500"
                 android:textSize="@dimen/loginscreenlabels" />
 
             <EditText
-                android:id="@+id/email"
+                android:id="@+id/username"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
@@ -85,7 +85,7 @@
         </LinearLayout>
 
         <Button
-            android:id="@+id/email_sign_in_button"
+            android:id="@+id/username_sign_in_button"
             style="?android:textAppearanceSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

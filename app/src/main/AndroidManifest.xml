@@ -12,7 +12,6 @@
         <activity
             android:name=".edit_list.ShoppingListActivity"
             android:label="@string/create_shoppinglist_label"
-            android:screenOrientation="portrait"
             android:theme="@style/Theme.Shopping"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -33,8 +32,26 @@
             android:windowSoftInputMode="adjustResize" />
 
         <provider
-            android:name="com.printz.guano.shoppingassistant.WareHistoryProvider"
-            android:authorities="com.printz.guano.shoppingassistant.provider"
+            android:name=".edit_list.WareHistoryProvider"
+            android:authorities="com.printz.guano.shoppingassistant.wareHistoryProvider"
+            android:exported="true"
+            android:readPermission="com.printz.guano.shoppingassistant.provider.READWRITE"
+            android:writePermission="com.printz.guano.shoppingassistant.provider.READWRITE" />
+        <provider
+            android:name=".login.UserProvider"
+            android:authorities="com.printz.guano.shoppingassistant.userProvider"
+            android:exported="true"
+            android:readPermission="com.printz.guano.shoppingassistant.provider.READWRITE"
+            android:writePermission="com.printz.guano.shoppingassistant.provider.READWRITE" />
+        <provider
+            android:name=".edit_list.WareProvider"
+            android:authorities="com.printz.guano.shoppingassistant.wareProvider"
+            android:exported="true"
+            android:readPermission="com.printz.guano.shoppingassistant.provider.READWRITE"
+            android:writePermission="com.printz.guano.shoppingassistant.provider.READWRITE" />
+        <provider
+            android:name=".ShoppingListProvider"
+            android:authorities="com.printz.guano.shoppingassistant.shoppingListProvider"
             android:exported="true"
             android:readPermission="com.printz.guano.shoppingassistant.provider.READWRITE"
             android:writePermission="com.printz.guano.shoppingassistant.provider.READWRITE" />

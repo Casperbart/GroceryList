@@ -16,25 +16,19 @@
         android:focusable="true"
         android:focusableInTouchMode="true" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin">
-
-
         <RelativeLayout
             android:id="@+id/dropDownAnchor"
             android:layout_width="match_parent"
+            android:paddingBottom="@dimen/activity_vertical_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingTop="@dimen/activity_vertical_margin"
             android:layout_height="wrap_content">
 
             <com.printz.guano.shoppingassistant.DefaultTopAutoCompleteTextView
                 android:id="@+id/autoCompleteAddWare"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="60dp"
                 android:dropDownAnchor="@id/dropDownAnchor"
                 android:dropDownWidth="wrap_content"
                 android:hint="@string/add_ware_hint"
@@ -53,18 +47,18 @@
                 android:layout_centerVertical="true"
                 android:background="@color/colorPrimaryDark"
                 android:contentDescription="@string/add_ware_description"
-                android:text="Close"
+                android:text="@string/button_done_text"
                 android:textColor="@color/colorToolbarSecondayText"
                 android:textSize="20sp"
                 android:visibility="gone" />
 
-            <!--<ListView-->
-                <!--android:id="@+id/listViewWares"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:layout_below="@+id/buttonCloseDropDown"-->
-                <!--android:layout_marginTop="2dp" />-->
         </RelativeLayout>
 
-    </LinearLayout>
+    <ListView
+        android:id="@+id/listViewWares"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/buttonCloseDropDown"
+        android:layout_marginTop="2dp" />
+
 </LinearLayout>

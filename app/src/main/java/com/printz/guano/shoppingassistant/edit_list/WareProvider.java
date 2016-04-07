@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant;
+package com.printz.guano.shoppingassistant.edit_list;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -7,14 +7,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class WaresProvider extends ContentProvider {
+import com.printz.guano.shoppingassistant.database.ListerDatabase;
+import com.printz.guano.shoppingassistant.database.WareContract;
 
-    private static final String LOG_TAG = WaresProvider.class.getSimpleName();
+public class WareProvider extends ContentProvider {
+
+    private static final String LOG_TAG = WareProvider.class.getSimpleName();
     private ListerDatabase mWaresDatabase;
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private static final int WARES = 100;
@@ -22,9 +24,9 @@ public class WaresProvider extends ContentProvider {
 
     private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-        final String authority = WaresContract.CONTENT_AUTHORITY;
-        matcher.addURI(authority, "friends", WARES);
-        matcher.addURI(authority, "friends/*", WARES_ID);
+        final String authority = WareContract.CONTENT_AUTHORITY;
+        matcher.addURI(authority, "wares", WARES);
+        matcher.addURI(authority, "wares/*", WARES_ID);
         return matcher;
     }
 
@@ -39,11 +41,11 @@ public class WaresProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match) {
             case WARES:
-                return WaresContract.Wares.CONTENT_TYPE;
+                return WareContract.Ware.CONTENT_TYPE;
             case WARES_ID:
-                return WaresContract.Wares.CONTENT_ITEM_TYPE;
+                return WareContract.Ware.CONTENT_ITEM_TYPE;
             default:
-                throw new IllegalArgumentException("Uknown Uri " + uri);
+                throw new IllegalArgumentException("Unknown Uri " + uri);
         }
 
     }
@@ -53,15 +55,15 @@ public class WaresProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteDatabase db = mWaresDatabase.getReadableDatabase();
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-        queryBuilder.setTables(ListerDatabase.Tables.WARES);
+        queryBuilder.setTables(ListerDatabase.Tables.WARE);
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
             case WARES:
                 break;
             case WARES_ID:
-                String id = WaresContract.Wares.getWareId(uri);
-                queryBuilder.appendWhere(WaresContract.WaresColumns.WARE_NAME + "=" + id);
+                String id = WareContract.Ware.getWareId(uri);
+                queryBuilder.appendWhere(WareContract.WareColumns.WARE_NAME + "=" + id);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown Uri " + uri);
@@ -80,8 +82,8 @@ public class WaresProvider extends ContentProvider {
 
         switch (match) {
             case WARES:
-                long rowId = db.insertOrThrow(ListerDatabase.Tables.WARES, null, values);
-                return WaresContract.Wares.buildWareUri(String.valueOf(rowId));
+                long rowId = db.insertOrThrow(ListerDatabase.Tables.WARE, null, values);
+                return WareContract.Ware.buildWareUri(String.valueOf(rowId));
             default:
                 throw new IllegalArgumentException("Unknown Uri " + uri);
         }
@@ -91,7 +93,7 @@ public class WaresProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOG_TAG, "Deleting with Uri " + uri);
 
-        if(uri.equals(WaresContract.TABLE_URI)) {
+        if (uri.equals(WareContract.TABLE_URI)) {
             ListerDatabase.deleteDatabase(getContext());
             return 0;
         }
@@ -100,12 +102,12 @@ public class WaresProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match) {
             case WARES_ID:
-                String _id = WaresContract.Wares.getWareId(uri);
-                String selectionCriteria = BaseColumns._ID + "=" + _id +
+                String _id = WareContract.Ware.getWareId(uri);
+                String selectionCriteria = WareContract.WareColumns.W_ID + "=" + _id +
                         (!TextUtils.isEmpty(selection) ? " AND " + "(" + selection + ")" : "");
-                return db.delete(ListerDatabase.Tables.WARES, selectionCriteria, selectionArgs);
+                return db.delete(ListerDatabase.Tables.WARE, selectionCriteria, selectionArgs);
             default:
-                throw new IllegalArgumentException("Uknown Uri " + uri);
+                throw new IllegalArgumentException("Unknown Uri " + uri);
         }
     }
 
@@ -121,14 +123,14 @@ public class WaresProvider extends ContentProvider {
                 // do noting
                 break;
             case WARES_ID:
-                String _id = WaresContract.Wares.getWareId(uri);
-                selectionCriteria = BaseColumns._ID + "=" + _id +
+                String _id = WareContract.Ware.getWareId(uri);
+                selectionCriteria = WareContract.WareColumns.W_ID + "=" + _id +
                         (!TextUtils.isEmpty(selection) ? " AND " + "(" + selection + ")" : "");
                 break;
             default:
-                throw new IllegalArgumentException("Uknown Uri " + uri + " with values " + values.toString());
+                throw new IllegalArgumentException("Unknown Uri " + uri + " with values " + values.toString());
         }
-        return db.update(ListerDatabase.Tables.WARES, values, selectionCriteria, selectionArgs);
+        return db.update(ListerDatabase.Tables.WARE, values, selectionCriteria, selectionArgs);
     }
 
     private void deleteDatabase() {
