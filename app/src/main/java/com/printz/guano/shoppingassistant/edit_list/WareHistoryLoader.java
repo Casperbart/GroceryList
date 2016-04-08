@@ -21,9 +21,9 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
     private ContentResolver mContentResolver;
     private Cursor mCursor;
 
-    public WareHistoryLoader(Context context, ContentResolver contentResolver) {
+    public WareHistoryLoader(Context context) {
         super(context);
-        mContentResolver = contentResolver;
+        mContentResolver = context.getContentResolver();
     }
 
     @Override

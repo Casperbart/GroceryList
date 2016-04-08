@@ -19,16 +19,18 @@ import com.printz.guano.shoppingassistant.database.WareContract;
 import com.printz.guano.shoppingassistant.misc.OnSwipeTouchListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class WareListAdapter extends ArrayAdapter<Ware> {
+public class WareAdapter extends ArrayAdapter<Ware> {
 
-    private static final String LOG_TAG = WareListAdapter.class.getSimpleName();
+    private static final String LOG_TAG = WareAdapter.class.getSimpleName();
     private LayoutInflater mLayoutInflater;
     private DatabaseLib mDatabaseLib;
 
-    public WareListAdapter(Context context) {
-        super(context, android.R.layout.simple_list_item_2);
+    public WareAdapter(Context context, int resource) {
+        super(context, resource);
+
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mDatabaseLib = new DatabaseLib(context.getContentResolver());
     }
@@ -107,11 +109,7 @@ public class WareListAdapter extends ArrayAdapter<Ware> {
      * @return Returns the number of wares removed.
      */
     public int deleteAllWares() {
-        int deleteCount = 0;
-
-        for(Ware ware : getWares()) {
-            deleteCount += mDatabaseLib.deleteWare(ware);
-        }
+        int deleteCount = mDatabaseLib.deleteWares(getWares());
 
         clear();
 
@@ -143,6 +141,7 @@ public class WareListAdapter extends ArrayAdapter<Ware> {
     public void setWares(List<Ware> wares) {
         clear();
         if (wares != null) {
+            Collections.sort(wares); // sorts to maintain position of wares in listview
             for (Ware ware : wares) {
                 add(ware);
             }

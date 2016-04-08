@@ -14,16 +14,17 @@ import java.util.List;
 
 public class WareLoader extends AsyncTaskLoader<List<Ware>> {
 
+    private static final String LOG_TAG = WareLoader.class.getSimpleName();
+
     public static final int LOADER_ID = 3;
 
-    private static final String LOG_TAG = WareLoader.class.getSimpleName();
-    private List<Ware> mWares;
     private ContentResolver mContentResolver;
+    private List<Ware> mWares;
     private Cursor mCursor;
 
-    public WareLoader(Context context, ContentResolver contentResolver) {
+    public WareLoader(Context context) {
         super(context);
-        mContentResolver = contentResolver;
+        mContentResolver = context.getContentResolver();
     }
 
     @Override

@@ -45,17 +45,21 @@ public class WareHistory implements Comparable<WareHistory>, Parcelable {
         this.mCount = count;
     }
 
+    public void incrementCount() {
+        this.mCount++;
+    }
+
     @Override
     public int compareTo(WareHistory another) {
         return this.getCount() - another.getCount();
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object object) {
         boolean isEqual = false;
 
-        if (o instanceof WareHistory) {
-            String otherName = ((WareHistory) o).getName();
+        if (object instanceof WareHistory) {
+            String otherName = ((WareHistory) object).getName();
             isEqual = mName.equals(otherName);
         }
 
@@ -83,4 +87,13 @@ public class WareHistory implements Comparable<WareHistory>, Parcelable {
             return new WareHistory[size];
         }
     };
+
+    /**
+     * Required for autocomplete dropdown to display name.
+     * @return Returns name of the WareHistory
+     */
+    @Override
+    public String toString() {
+        return mName;
+    }
 }

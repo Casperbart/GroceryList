@@ -2,13 +2,10 @@ package com.printz.guano.shoppingassistant.edit_list;
 
 
 import android.app.LoaderManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -23,18 +20,13 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.printz.guano.shoppingassistant.AutoCompleteListAdapter;
 import com.printz.guano.shoppingassistant.BaseActivity;
-import com.printz.guano.shoppingassistant.DefaultTopAutoCompleteTextView;
 import com.printz.guano.shoppingassistant.R;
 import com.printz.guano.shoppingassistant.UserSession;
-import com.printz.guano.shoppingassistant.database.DatabaseLib;
-import com.printz.guano.shoppingassistant.database.WareHistoryContract;
 import com.printz.guano.shoppingassistant.login.LoginActivity;
 import com.printz.guano.shoppingassistant.share_list.ShareActivity;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ShoppingListActivity extends BaseActivity
@@ -42,14 +34,11 @@ public class ShoppingListActivity extends BaseActivity
 
     private final static String LOG_TAG = ShoppingListActivity.class.getSimpleName();
 
-    private ArrayList<WareHistory> mWareHistories;
-    private DefaultTopAutoCompleteTextView mAutoCompleteTextView;
-    private Button mCloseDropdownButton;
-    private AutoCompleteListAdapter mAutoCompleteAdapter;
-    private WareListAdapter mShoppingListAdapter;
+    private TopAutoCompleteTextView mTopAutoCompleteTextView;
+    private Button mCloseButton;
+    private WareHistoryAdapter mWareHistoryAdapter;
+    private WareAdapter mWareAdapter;
     private FragmentManager mFragmentManager;
-    private ContentResolver mContentResolver;
-    private DatabaseLib mDatabaseLib;
 
     /**
      * Call back LoaderManagers to handle loading of WareHistory's and Ware's
@@ -64,70 +53,69 @@ public class ShoppingListActivity extends BaseActivity
         setContentView(R.layout.activity_list);
         activateToolbar();
 
-        UserSession.initializeUserSession(this);
+        // utility calls
 //        ListerDatabase.deleteDatabase(this);
+        UserSession.initializeUserSession(this);
 
         mFragmentManager = getSupportFragmentManager();
-        mContentResolver = getContentResolver();
-        mDatabaseLib = new DatabaseLib(mContentResolver);
+
         ListView mWareListView = (ListView) findViewById(R.id.listViewWares);
-        mShoppingListAdapter = new WareListAdapter(this);
+        mTopAutoCompleteTextView = (TopAutoCompleteTextView) findViewById(R.id.autoCompleteAddWare);
 
-        mAutoCompleteTextView = (DefaultTopAutoCompleteTextView) findViewById(R.id.autoCompleteAddWare);
-        mCloseDropdownButton = (Button) findViewById(R.id.buttonCloseDropDown);
+        mCloseButton = (Button) findViewById(R.id.buttonCloseDropDown);
 
-        mAutoCompleteAdapter = new AutoCompleteListAdapter(
-                this, R.layout.item_dropdown, new ArrayList<String>()
-        );
+        mWareAdapter = new WareAdapter(this, R.layout.item_ware);
+        mWareHistoryAdapter = new WareHistoryAdapter(this, R.layout.item_dropdown);
 
-        mWareListView.setAdapter(mShoppingListAdapter);
-        mAutoCompleteTextView.setAdapter(mAutoCompleteAdapter);
-        mAutoCompleteTextView.setThreshold(1);
+        mWareListView.setAdapter(mWareAdapter);
+        mTopAutoCompleteTextView.setAdapter(mWareHistoryAdapter);
 
-        mCloseDropdownButton.setOnClickListener(new View.OnClickListener() {
+        mTopAutoCompleteTextView.setThreshold(1);
+
+        mCloseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mAutoCompleteTextView.isPopupShowing()) {
-                    mAutoCompleteTextView.dismissDropDown();
+                if (mTopAutoCompleteTextView.isPopupShowing()) {
+                    mTopAutoCompleteTextView.dismissDropDown();
                 } else {
-                    mAutoCompleteTextView.clearFocus();
+                    mTopAutoCompleteTextView.clearFocus();
                 }
             }
         });
 
-        mAutoCompleteTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        mTopAutoCompleteTextView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    mCloseDropdownButton.setVisibility(View.VISIBLE);
-                    if (mAutoCompleteTextView.enoughToFilter()) {
-                        mAutoCompleteTextView.showDropDown();
+                    mCloseButton.setVisibility(View.VISIBLE);
+                    if (mTopAutoCompleteTextView.enoughToFilter()) {
+                        mTopAutoCompleteTextView.showDropDown();
                     }
                 } else {
-                    mCloseDropdownButton.setVisibility(View.GONE);
+                    mCloseButton.setVisibility(View.GONE);
                     InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
             }
         });
 
-        mAutoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mTopAutoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String wareName = (String) parent.getItemAtPosition(position);
-                if (isValidName(wareName)) {
-                    addWare(wareName);
+                WareHistory wareHistory = (WareHistory) parent.getItemAtPosition(position);
+                if (isValidName(wareHistory.getName())) {
+                    addWare(wareHistory.getName());
                 }
             }
         });
 
-        mAutoCompleteTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        mTopAutoCompleteTextView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
                     handled = true;
-                    String wareName = mAutoCompleteTextView.getText().toString();
+                    String wareName = mTopAutoCompleteTextView.getText().toString();
                     if (isValidName(wareName)) {
                         addWare(wareName);
                     }
@@ -141,6 +129,9 @@ public class ShoppingListActivity extends BaseActivity
         if (savedInstanceState == null) {
             loadApplicationData();
         }
+
+//        UserSession userSession = UserSession.getUserSession();
+//        userSession.clearSession();
     }
 
     private void setupLoaderListeners() {
@@ -149,13 +140,13 @@ public class ShoppingListActivity extends BaseActivity
             public Loader<List<WareHistory>> onCreateLoader(int id, Bundle args) {
                 Context context = getBaseContext();
                 Log.d(LOG_TAG, "Creating ware history loader");
-                return new WareHistoryLoader(context, mContentResolver);
+                return new WareHistoryLoader(context);
             }
 
             @Override
             public void onLoadFinished(Loader<List<WareHistory>> loader, List<WareHistory> wareHistories) {
                 Log.d(LOG_TAG, "Finished loading ware history");
-                addNamesToWareAutoComplete(wareHistories);
+                mWareHistoryAdapter.setWareHistories(wareHistories);
             }
 
             @Override
@@ -169,14 +160,13 @@ public class ShoppingListActivity extends BaseActivity
             public Loader<List<Ware>> onCreateLoader(int id, Bundle args) {
                 Context context = getBaseContext();
                 Log.d(LOG_TAG, "Creating ware loader");
-                return new WareLoader(context, mContentResolver);
+                return new WareLoader(context);
             }
 
             @Override
             public void onLoadFinished(Loader<List<Ware>> loader, List<Ware> wares) {
                 Log.d(LOG_TAG, "Finished loading wares");
-                Collections.sort(wares); // sorts to maintain position of wares in listview
-                mShoppingListAdapter.setWares(wares);
+                mWareAdapter.setWares(wares);
             }
 
             @Override
@@ -207,37 +197,26 @@ public class ShoppingListActivity extends BaseActivity
         getLoaderManager().restartLoader(WareLoader.LOADER_ID, null, mWareLoaderListener);
     }
 
-    private void addNamesToWareAutoComplete(List<WareHistory> wareHistories) {
-        Collections.sort(wareHistories);
-        Collections.reverse(wareHistories);
-        mWareHistories = (ArrayList) wareHistories;
-
-        List<String> wareNames = new ArrayList<>();
-        for (WareHistory wareHistory : wareHistories) {
-            wareNames.add(wareHistory.getName());
-        }
-
-        mAutoCompleteAdapter.setData(wareNames);
-    }
-
     /**
      * Invalidate menu and load new user data
      */
     @Override
     public void onSessionChanged() {
         Log.d(LOG_TAG, "Session changed");
-        reloadApplicationData();
+        resetFocus();
+        resetAddWareText();
         setActivityTitle();
-        mAutoCompleteTextView.setText("");
+        reloadApplicationData();
         invalidateOptionsMenu();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         Log.d(LOG_TAG, "Saving activity state");
-        ArrayList<Ware> wares = mShoppingListAdapter.getWares();
-        outState.putParcelableArrayList("wares", wares);
-        outState.putParcelableArrayList("wareHistories", mWareHistories);
+
+        outState.putParcelableArrayList("wares", mWareAdapter.getWares());
+        outState.putParcelableArrayList("wareHistories", mWareHistoryAdapter.getWareHistories());
+
         super.onSaveInstanceState(outState);
     }
 
@@ -246,12 +225,12 @@ public class ShoppingListActivity extends BaseActivity
         Log.d(LOG_TAG, "Restoring activity state");
 
         ArrayList<Ware> savedWares = savedInstanceState.getParcelableArrayList("wares");
-        mShoppingListAdapter.setWares(savedWares);
         ArrayList<WareHistory> savedWareHistories = savedInstanceState.getParcelableArrayList("wareHistories");
-        addNamesToWareAutoComplete(savedWareHistories);
+        mWareAdapter.setWares(savedWares);
+        mWareHistoryAdapter.setWareHistories(savedWareHistories);
+
         super.onRestoreInstanceState(savedInstanceState);
     }
-
 
     /**
      * Adds ware to shopping list adapter as well as the ware history.
@@ -259,75 +238,12 @@ public class ShoppingListActivity extends BaseActivity
      */
     private void addWare(String wareName) {
         Ware ware = new Ware(0, wareName, 0, false, "not set", "not set");
-        mShoppingListAdapter.insertWare(ware);
-        addHistory(wareName);
-        mAutoCompleteTextView.setText("");
-    }
+        WareHistory wareHistory = new WareHistory(1, wareName, 1);
 
-    /**
-     * This updates the WareHistory if it already exists and inserts
-     * a new WareHistory if it is null. The method both updates the existing
-     * WareHistory list mWaresHistories and local database and likewise for inserts.
-     *
-     * @param wareName name of ware
-     */
-    private void addHistory(String wareName) {
-        WareHistory wareHistory = isExistingWareHistory(wareName);
+        mWareAdapter.insertWare(ware);
+        mWareHistoryAdapter.insertWareHistory(wareHistory);
 
-        if (wareHistory == null) { // first time this ware is added
-            Uri returnedUri = mDatabaseLib.insertWareHistory(wareName);
-            addToExistingWareHistories(wareName, returnedUri);
-        } else {
-            int count = updateExistingWareHistories(wareHistory);
-            mDatabaseLib.updateWareHistory(wareHistory.getId(), count + 1);
-        }
-    }
-
-    /**
-     * Checks and returns the WareHistory if it exists and null if it does not
-     *
-     * @param wareName The name of the ware to check if it already exists
-     * @return The WareHistory if it exists, and null if it does not
-     */
-    @Nullable
-    private WareHistory isExistingWareHistory(String wareName) {
-        WareHistory wareHistory = null;
-
-        for (WareHistory wHistory : mWareHistories) {
-            if (wHistory.getName().equals(wareName)) {
-                wareHistory = wHistory;
-                break;
-            }
-        }
-        return wareHistory;
-    }
-
-    /**
-     * Inserts a new WareHistory to the mWaresHistories and updates the
-     * WareHistory names autocomplete with the new bigger list
-     *
-     * @param wareName    name of ware
-     * @param returnedUri returned Uri by provider on new ware insert,
-     *                    all wares have an associated id so its used to create ware isntance
-     */
-    private void addToExistingWareHistories(String wareName, Uri returnedUri) {
-        String id = WareHistoryContract.WareHistory.getWareHistoryId(returnedUri);
-        WareHistory newWareHistory = new WareHistory(Integer.valueOf(id), wareName, 1);
-        mWareHistories.add(newWareHistory);
-        addNamesToWareAutoComplete(mWareHistories);
-    }
-
-    /**
-     * Updates an existing WareHistory name with a new count
-     *
-     * @param wareHistory the warehistory to insert into the existing auto complete
-     * @return the count value later used by to insert warehistory into localdb
-     */
-    private int updateExistingWareHistories(WareHistory wareHistory) {
-        int count = wareHistory.getCount();
-        wareHistory.setCount(count + 1);
-        addNamesToWareAutoComplete(mWareHistories);
-        return count;
+        mTopAutoCompleteTextView.setText("");
     }
 
     @Override
@@ -442,18 +358,29 @@ public class ShoppingListActivity extends BaseActivity
         setTitle(activityTitle);
     }
 
+    private void resetFocus() {
+        View view = getCurrentFocus();
+        if(view != null) {
+            view.clearFocus();
+        }
+    }
+
+    private void resetAddWareText() {
+        mTopAutoCompleteTextView.setText("");
+    }
+
     @Override
     public void onDialogFinishes(final String DIALOG_TYPE, final boolean ANSWER) {
         switch (DIALOG_TYPE) {
             case ShoppingListDialog.DELETE_ALL_WARES:
                 if (ANSWER) {
-                    int deleteCount = mShoppingListAdapter.deleteAllWares();
+                    int deleteCount = mWareAdapter.deleteAllWares();
                     Log.d(LOG_TAG, "Deleted " + deleteCount + " wares");
                 }
                 break;
             case ShoppingListDialog.DELETE_ALL_MARKED:
                 if (ANSWER) {
-                    int deleteCount = mShoppingListAdapter.deleteMarkedWares();
+                    int deleteCount = mWareAdapter.deleteMarkedWares();
                     Log.d(LOG_TAG, "Deleted " + deleteCount + " marked wares");
                 }
                 break;

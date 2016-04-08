@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.printz.guano.shoppingassistant.UserSession;
 import com.printz.guano.shoppingassistant.edit_list.Ware;
+import com.printz.guano.shoppingassistant.edit_list.WareHistory;
 
 import java.util.List;
 import java.util.Map;
@@ -80,30 +81,33 @@ public class DatabaseLib {
     /**
      * Inserts a new WareHistory into the database.
      *
-     * @param wareName name of ware
+     * @param wareHistory The WareHistory to insert.
      * @return The uri of the new inserted WareHistory row
      */
-    public Uri insertWareHistory(String wareName) {
-        Log.d(LOG_TAG, "Inserting new ware history " + wareName);
+    public Uri insertWareHistory(WareHistory wareHistory) {
+        Log.d(LOG_TAG, "Inserting new ware history " + wareHistory.getName());
         String userId = getUserId();
 
         ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME, wareName);
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, 1);
+        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME, wareHistory.getName());
+        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
         values.put(WareHistoryContract.WareHistoryColumns.USER_ID, userId);
+
         return mContentResolver.insert(WareHistoryContract.TABLE_URI, values);
     }
 
     /**
      * Updates the WareHistory in the database with a +1 count
      *
-     * @param newCount      the count to update the ware in the database with
-     * @param wareHistoryId the id to construct the warehistory Uri
+     * @param wareHistory The WareHistory to update
+     * @return Returns the number of updated WareHistories
      */
-    public int updateWareHistory(int wareHistoryId, int newCount) {
-        Uri uri = WareHistoryContract.WareHistory.buildWareHistoryUri(String.valueOf(wareHistoryId));
+    public int updateWareHistory(WareHistory wareHistory) {
+        Uri uri = WareHistoryContract.WareHistory.buildWareHistoryUri(String.valueOf(wareHistory.getId()));
+
         ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, newCount);
+        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
+
         return mContentResolver.update(uri, values, null, null);
     }
 
@@ -117,23 +121,6 @@ public class DatabaseLib {
 
         for(Ware ware : wares) {
             deleteCount += deleteWare(ware);
-        }
-
-        return deleteCount;
-    }
-
-    /**
-     * Enumerates the supplied list and deletes the marked wares in the database
-     * @param wares The wares to delete the marked wares in
-     * @return The number of wares deleted
-     */
-    public int deleteMarkedWares(List<Ware> wares) {
-        int deleteCount = 0;
-
-        for(Ware ware : wares) {
-            if(ware.isMarked()) {
-                deleteCount += deleteWare(ware);
-            }
         }
 
         return deleteCount;

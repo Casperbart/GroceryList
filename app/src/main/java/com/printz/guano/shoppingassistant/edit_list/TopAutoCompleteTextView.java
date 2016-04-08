@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant;
+package com.printz.guano.shoppingassistant.edit_list;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -7,23 +7,21 @@ import android.view.KeyEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 
-public class DefaultTopAutoCompleteTextView extends AutoCompleteTextView {
+public class TopAutoCompleteTextView extends AutoCompleteTextView {
 
-    private final static String LOG_TAG = DefaultTopAutoCompleteTextView.class.getSimpleName();
+    private final static String LOG_TAG = TopAutoCompleteTextView.class.getSimpleName();
 
-    public DefaultTopAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TopAutoCompleteTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public DefaultTopAutoCompleteTextView(Context context, AttributeSet attrs) {
+    public TopAutoCompleteTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public DefaultTopAutoCompleteTextView(Context context) {
+    public TopAutoCompleteTextView(Context context) {
         super(context);
     }
-
-
 
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
