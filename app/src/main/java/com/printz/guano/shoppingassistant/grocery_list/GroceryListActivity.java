@@ -134,7 +134,7 @@ public class GroceryListActivity extends BaseActivity
         setupLoaderListeners();
 
         // create account required to syncadapter.xml framework
-        mAccount = SyncAccount.CreateSyncAccount(this);
+        mAccount = SyncAccount.createSyncAccount(this);
 
         wareObserver = new TableObserver(null, mAccount);
 

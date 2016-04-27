@@ -43,6 +43,11 @@ public class RestClient {
 
     private JSONObject responseBody;
 
+    public RestClient(String route) {
+        this();
+        this.route = route;
+    }
+
     public RestClient() {
         requestBody = new JSONObject();
     }
@@ -60,7 +65,7 @@ public class RestClient {
         }
     }
 
-    public void addUrlParam(String key, String value) {
+    public void addRequestParam(String key, String value) {
         requestParams.put(key, value);
     }
 
@@ -105,15 +110,16 @@ public class RestClient {
 
             } finally {
                 if (connection != null) {
+                    int responseCode = connection.getResponseCode();
                     connection.disconnect();
+                    return responseCode;
                 }
             }
         } catch (JSONException e) {
             Log.d(LOG_TAG, "Error parsing json");
-            return 0;
         }
 
-        return connection.getResponseCode();
+        return 0;
     }
 
     /**
@@ -146,15 +152,16 @@ public class RestClient {
 
             } finally {
                 if (connection != null) {
+                    int responseCode = connection.getResponseCode();
                     connection.disconnect();
+                    return responseCode;
                 }
             }
         } catch (JSONException e) {
             Log.d(LOG_TAG, "Error parsing json");
-            return 0;
         }
 
-        return connection.getResponseCode();
+        return 0;
     }
 
     public int executePut() throws IOException {
@@ -183,15 +190,16 @@ public class RestClient {
 
             } finally {
                 if (connection != null) {
+                    int responseCode = connection.getResponseCode();
                     connection.disconnect();
+                    return responseCode;
                 }
             }
         } catch (JSONException e) {
             Log.d(LOG_TAG, "Error parsing json");
-            return 0;
         }
 
-        return connection.getResponseCode();
+        return 0;
     }
 
     public int executeDelete(String id) throws IOException {

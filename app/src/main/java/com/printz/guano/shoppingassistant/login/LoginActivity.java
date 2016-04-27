@@ -246,8 +246,7 @@ public class LoginActivity extends BaseActivity {
                     mUsernameView.requestFocus();
                     break;
                 default:
-                    // something went wrong
-                    break;
+                    // cant happen because of register() method return value
             }
         }
 
