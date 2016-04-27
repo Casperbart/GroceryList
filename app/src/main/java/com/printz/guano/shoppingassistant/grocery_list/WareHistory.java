@@ -1,32 +1,33 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 public class WareHistory implements Comparable<WareHistory>, Parcelable {
 
-    private int hId;
+    private int mHistoryId;
     private String mName;
     private Integer mCount;
 
-    public WareHistory(int hId, String name, int count) {
-        this.hId = hId;
+    public WareHistory(int mHistoryId, String name, int count) {
+        this.mHistoryId = mHistoryId;
         this.mCount = count;
         this.mName = name;
     }
 
-    public WareHistory(Parcel in) {
-        this.hId = in.readInt();
+    private WareHistory(Parcel in) {
+        this.mHistoryId = in.readInt();
         this.mName = in.readString();
         this.mCount = in.readInt();
     }
 
     public int getId() {
-        return hId;
+        return mHistoryId;
     }
 
     public void setId(int id) {
-        this.hId = id;
+        this.mHistoryId = id;
     }
 
     public String getName() {
@@ -50,7 +51,7 @@ public class WareHistory implements Comparable<WareHistory>, Parcelable {
     }
 
     @Override
-    public int compareTo(WareHistory another) {
+    public int compareTo(@NonNull WareHistory another) {
         return this.getCount() - another.getCount();
     }
 
@@ -73,7 +74,7 @@ public class WareHistory implements Comparable<WareHistory>, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(hId);
+        dest.writeInt(mHistoryId);
         dest.writeString(mName);
         dest.writeInt(mCount);
     }

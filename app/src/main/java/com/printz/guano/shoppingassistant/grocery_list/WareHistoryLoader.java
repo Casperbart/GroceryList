@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.printz.guano.shoppingassistant.UserSession;
-import com.printz.guano.shoppingassistant.database.WareHistoryContract;
+import com.printz.guano.shoppingassistant.database.Contract;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,16 +28,15 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
 
     @Override
     public List<WareHistory> loadInBackground() {
-//        android.os.Debug.waitForDebugger();
         List<WareHistory> entries = new ArrayList<>();
 
         String[] projection = {
-                WareHistoryContract.WareHistoryColumns.H_ID,
-                WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME,
-                WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT
+                Contract.WareHistoryColumns.H_ID,
+                Contract.WareHistoryColumns.WARE_HISTORY_NAME,
+                Contract.WareHistoryColumns.WARE_HISTORY_COUNT
         };
 
-        String selection = WareHistoryContract.WareHistoryColumns.USER_ID + "=?";
+        String selection = Contract.WareHistoryColumns.USER_ID + "=?";
 
         String userId = "1"; // default user
 
@@ -50,18 +49,20 @@ public class WareHistoryLoader extends AsyncTaskLoader<List<WareHistory>> {
                 userId
         };
 
-        mCursor = mContentResolver.query(WareHistoryContract.TABLE_URI, projection, selection, selectionArgs, null);
+        mCursor = mContentResolver.query(Contract.WareHistory.CONTENT_URI, projection, selection, selectionArgs, null);
 
         if (mCursor != null) {
             if (mCursor.moveToFirst()) {
                 do {
-                    int id = mCursor.getInt(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.H_ID));
-                    String name = mCursor.getString(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME));
-                    int count = mCursor.getInt(mCursor.getColumnIndex(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT));
+                    int id = mCursor.getInt(mCursor.getColumnIndex(Contract.WareHistoryColumns.H_ID));
+                    String name = mCursor.getString(mCursor.getColumnIndex(Contract.WareHistoryColumns.WARE_HISTORY_NAME));
+                    int count = mCursor.getInt(mCursor.getColumnIndex(Contract.WareHistoryColumns.WARE_HISTORY_COUNT));
                     WareHistory wareHistory = new WareHistory(id, name, count);
                     entries.add(wareHistory);
                 } while (mCursor.moveToNext());
             }
+
+            mCursor.close();
         }
 
         return entries;

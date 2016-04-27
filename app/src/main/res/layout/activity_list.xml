@@ -25,7 +25,7 @@
             android:paddingTop="@dimen/activity_vertical_margin"
             android:layout_height="wrap_content">
 
-            <com.printz.guano.shoppingassistant.edit_list.TopAutoCompleteTextView
+            <com.printz.guano.shoppingassistant.grocery_list.TopAutoCompleteTextView
                 android:id="@+id/autoCompleteAddWare"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
@@ -58,7 +58,6 @@
         android:id="@+id/listViewWares"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/buttonCloseDropDown"
         android:layout_marginTop="2dp" />
 
 </LinearLayout>

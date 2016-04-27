@@ -1,18 +1,18 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
+import com.printz.guano.shoppingassistant.database.Contract;
 import com.printz.guano.shoppingassistant.database.DatabaseLib;
-import com.printz.guano.shoppingassistant.database.WareHistoryContract;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class WareHistoryAdapter extends ArrayAdapter<WareHistory> {
+class WareHistoryAdapter extends ArrayAdapter<WareHistory> {
 
     private static final String LOG_TAG = WareHistoryAdapter.class.getSimpleName();
 
@@ -68,14 +68,14 @@ public class WareHistoryAdapter extends ArrayAdapter<WareHistory> {
      * @return Returns all the wares in the adapter.
      */
     public ArrayList<WareHistory> getWareHistories() {
-        return (ArrayList) mWareHistories;
+        return (ArrayList<WareHistory>) mWareHistories;
     }
 
     private void addWareHistory(WareHistory wareHistory) {
         Log.d(LOG_TAG, "Inserting ware history " + "'" + wareHistory.getName() + "'");
 
         Uri uri = mDatabaseLib.insertWareHistory(wareHistory);
-        String wareHistoryId = WareHistoryContract.WareHistory.getWareHistoryId(uri);
+        String wareHistoryId = Contract.WareHistory.getWareHistoryId(uri);
         wareHistory.setId(Integer.valueOf(wareHistoryId));
 
         mWareHistories.add(wareHistory);

@@ -1,23 +1,21 @@
 package com.printz.guano.shoppingassistant.login;
 
-public class User {
+class User {
 
-    private int uId;
+    private int mUserId;
     private String mUserName;
-    private String mPassword;
 
-    public User(int uId, String userName, String password) {
-        this.uId = uId;
+    public User(int mUserId, String userName) {
+        this.mUserId = mUserId;
         this.mUserName = userName;
-        this.mPassword = password;
     }
 
-    public int getuId() {
-        return uId;
+    public int getUserId() {
+        return mUserId;
     }
 
-    public void setuId(int uId) {
-        this.uId = uId;
+    public void setUserId(int userId) {
+        this.mUserId = userId;
     }
 
     public String getUserName() {
@@ -26,13 +24,5 @@ public class User {
 
     public void setUserName(String userName) {
         this.mUserName = userName;
-    }
-
-    public String getPassword() {
-        return mPassword;
-    }
-
-    public void setPassword(String password) {
-        this.mPassword = password;
     }
 }

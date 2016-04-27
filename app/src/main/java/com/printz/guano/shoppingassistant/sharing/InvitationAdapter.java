@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant.share_list;
+package com.printz.guano.shoppingassistant.sharing;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,12 +13,12 @@ import com.printz.guano.shoppingassistant.R;
 
 import java.util.List;
 
-public class ShareFriendAdapter extends ArrayAdapter<Friend> {
+public class InvitationAdapter extends ArrayAdapter<Invitation> {
 
-    private static final String LOG_TAG = ShareFriendAdapter.class.getSimpleName();
+    private static final String LOG_TAG = InvitationAdapter.class.getSimpleName();
     private LayoutInflater mLayoutInflater;
 
-    public ShareFriendAdapter(Context context) {
+    public InvitationAdapter(Context context) {
         super(context, android.R.layout.simple_list_item_2);
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -32,9 +32,9 @@ public class ShareFriendAdapter extends ArrayAdapter<Friend> {
             view = convertView;
         }
 
-        final Friend friend = getItem(position);
-        final String name = friend.getName();
-        final InvitationStatus status = friend.getAnswer();
+        final Invitation invitation = getItem(position);
+        final String name = invitation.getName();
+        final InvitationStatus status = invitation.getStatus();
 
         TextView friendPrimaryText = (TextView) view.findViewById(R.id.textViewFriendPrimary);
         TextView friendSecondaryText = (TextView) view.findViewById(R.id.textViewFriendSecondary);
@@ -53,11 +53,11 @@ public class ShareFriendAdapter extends ArrayAdapter<Friend> {
         return view;
     }
 
-    public void setData(List<Friend> friends) {
+    public void setData(List<Invitation> invitations) {
         clear();
-        if (friends != null) {
-            for (Friend friend : friends) {
-                add(friend);
+        if (invitations != null) {
+            for (Invitation invitation : invitations) {
+                add(invitation);
             }
         }
     }

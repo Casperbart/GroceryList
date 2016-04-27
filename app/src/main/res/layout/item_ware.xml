@@ -1,53 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeLayoutWare"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="60dp"
     android:background="@color/colorPrimaryBackground"
-    android:orientation="vertical">
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:orientation="horizontal">
 
-    <RelativeLayout
-        android:id="@+id/relativeLayoutWare"
-        android:layout_width="match_parent"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
+    <LinearLayout
+        android:id="@+id/quantityView"
+        android:layout_width="60dp"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:background="@drawable/button_selector"
+        android:clickable="true"
+        android:orientation="vertical">
 
         <ImageButton
             android:id="@+id/imageButtonQuantity"
             android:layout_width="60dp"
-            android:layout_height="80dp"
-            android:clickable="false"
+            android:layout_height="match_parent"
             android:layout_gravity="center_horizontal"
-            android:background="@color/colorPrimaryBackground"
+            android:background="@drawable/button_selector"
+            android:clickable="false"
             android:contentDescription="@string/quantity_picker_description"
             android:src="@drawable/ic_action_scales" />
 
         <TextView
-            android:id="@+id/textViewWareName"
-            android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:layout_toEndOf="@+id/imageButtonQuantity"
-            android:layout_toLeftOf="@+id/imageButtonSpecialOffer"
-            android:layout_toRightOf="@+id/imageButtonQuantity"
-            android:layout_toStartOf="@+id/imageButtonSpecialOffer"
-            android:background="@color/colorPrimaryBackground"
-            android:gravity="center_vertical"
-            android:textColor="@color/colorPrimaryText"
-            android:textSize="@dimen/warePrimaryText"
-            android:textStyle="bold" />
-
-        <ImageButton
-            android:id="@+id/imageButtonSpecialOffer"
-            android:layout_width="60dp"
-            android:layout_height="80dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
+            android:id="@+id/textWareAmount"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
             android:clickable="false"
-            android:background="@color/md_white_1000"
-            android:contentDescription="@string/special_offer_description"
-            android:src="@drawable/ic_action_special_offer" />
+            android:gravity="center"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="20sp"
+            android:visibility="gone" />
 
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/textWareType"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:clickable="false"
+            android:gravity="center"
+            android:textColor="@color/colorPrimaryText"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
-</LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textViewWareName"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toEndOf="@+id/quantityView"
+        android:layout_toStartOf="@+id/imageButtonSpecialOffer"
+        android:background="@color/colorPrimaryBackground"
+        android:gravity="center_vertical"
+        android:textColor="@color/colorPrimaryText"
+        android:textSize="@dimen/warePrimaryText"
+        android:textStyle="bold" />
+
+    <ImageButton
+        android:id="@+id/imageButtonSpecialOffer"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:background="@color/md_white_1000"
+        android:clickable="false"
+        android:contentDescription="@string/special_offer_description"
+        android:src="@drawable/ic_action_special_offer" />
+
+</RelativeLayout>

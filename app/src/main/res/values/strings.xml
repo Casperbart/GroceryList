@@ -8,7 +8,7 @@
     <string name="share_shoppinglist_title">share shopping</string>
     <string name="delete_shoppinglist_title">delete shoppinglist</string>
     <string name="add_ware_hint">Add an item</string>
-    <string name="remove_friend_button_description">remove friend</string>
+    <string name="remove_friend_button_description">remove invitation</string>
     <string name="send_invitation_text">Send</string>
     <string name="send_invitation_hint">Enter Username</string>
     <string name="friend_text_placeholder">Mr. Universe</string>
@@ -21,20 +21,29 @@
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login -->
-    <string name="action_sign_in">Log in or Sign up</string>
+    <string name="action_sign_in">Sign Up</string>
+    <string name="action_log_in">Log In</string>
     <string name="action_sign_in_short">Sign in</string>
+    <!-- Form sanitation strings-->
+    <string name="error_field_required">This field is required</string>
     <string name="error_invalid_username">This username is invalid</string>
     <string name="error_invalid_password">This password is invalid</string>
     <string name="error_incorrect_password">This password is incorrect</string>
-    <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing username
-        completions."
-    </string>
+    <string name="error_username_length">This username is too short</string>
+    <string name="error_password_length">This password is too short</string>
+    <!-- Form authentication strings -->
+    <string name="auth_username_already_exists">This username is already taken</string>
+    <string name="auth_username_does_not_exist">Wrong username</string>
+    <string name="auth_wrong_password">Wrong password</string>
+    <string name="auth_server_error">Autentication server encountered an error</string>
+    <string name="auth_unknown_error">Something went wrong. Please try again!</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing username completions." </string>
+     <!-- UI title texts-->
     <string name="login_password_text">Password</string>
     <string name="login_username_text">Username</string>
     <string name="login_screen_title">Log in to Lister.</string>
     <string name="menu_login_signup_title">Log in or Sign up</string>
     <string name="menu_logout_title">Log out</string>
     <string name="button_done_text">Done</string>
-    <string name="error_username_length">This username is too short</string>
+    <string name="grocerygo_icon_description">GroceryGo Icon</string>
 </resources>

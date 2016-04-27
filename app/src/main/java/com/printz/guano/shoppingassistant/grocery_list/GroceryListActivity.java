@@ -1,10 +1,12 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 
+import android.accounts.Account;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -22,23 +24,29 @@ import android.widget.TextView;
 
 import com.printz.guano.shoppingassistant.BaseActivity;
 import com.printz.guano.shoppingassistant.R;
+import com.printz.guano.shoppingassistant.TableObserver;
 import com.printz.guano.shoppingassistant.UserSession;
+import com.printz.guano.shoppingassistant.database.Contract;
 import com.printz.guano.shoppingassistant.login.LoginActivity;
-import com.printz.guano.shoppingassistant.share_list.ShareActivity;
+import com.printz.guano.shoppingassistant.sharing.ShareActivity;
+import com.printz.guano.shoppingassistant.account.SyncAccount;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ShoppingListActivity extends BaseActivity
-        implements ShoppingListDialogListener, UserSession.SessionChangedListener {
+public class GroceryListActivity extends BaseActivity
+        implements OptionsDialogListener, UserSession.SessionChangedListener,
+        QuantityDialogListener {
 
-    private final static String LOG_TAG = ShoppingListActivity.class.getSimpleName();
+    private final static String LOG_TAG = GroceryListActivity.class.getSimpleName();
 
     private TopAutoCompleteTextView mTopAutoCompleteTextView;
     private Button mCloseButton;
     private WareHistoryAdapter mWareHistoryAdapter;
     private WareAdapter mWareAdapter;
     private FragmentManager mFragmentManager;
+    private TableObserver wareObserver;
+    private Account mAccount;
 
     /**
      * Call back LoaderManagers to handle loading of WareHistory's and Ware's
@@ -48,14 +56,13 @@ public class ShoppingListActivity extends BaseActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(LOG_TAG, "I am now created");
+    Log.d(LOG_TAG, "I am now created");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
         activateToolbar();
 
-        // utility calls
-//        ListerDatabase.deleteDatabase(this);
         UserSession.initializeUserSession(this);
+
 
         mFragmentManager = getSupportFragmentManager();
 
@@ -126,12 +133,24 @@ public class ShoppingListActivity extends BaseActivity
 
         setupLoaderListeners();
 
+        // create account required to syncadapter.xml framework
+        mAccount = SyncAccount.CreateSyncAccount(this);
+
+        wareObserver = new TableObserver(null, mAccount);
+
         if (savedInstanceState == null) {
             loadApplicationData();
         }
 
+//        ListerDatabase.deleteDatabase(this);
 //        UserSession userSession = UserSession.getUserSession();
 //        userSession.clearSession();
+    }
+
+    @Override
+    public void onQuantityDialogFinished(int position, String amount, String type) {
+        Log.d(LOG_TAG, "Selected '" + amount + " " + type + "'");
+        mWareAdapter.setQuantity(position, amount, type);
     }
 
     private void setupLoaderListeners() {
@@ -237,13 +256,18 @@ public class ShoppingListActivity extends BaseActivity
      * @param wareName The name of the ware to insert
      */
     private void addWare(String wareName) {
-        Ware ware = new Ware(0, wareName, 0, false, "not set", "not set");
+        Ware ware = new Ware(0, wareName, 0, false, "-", "-");
         WareHistory wareHistory = new WareHistory(1, wareName, 1);
 
         mWareAdapter.insertWare(ware);
         mWareHistoryAdapter.insertWareHistory(wareHistory);
 
         mTopAutoCompleteTextView.setText("");
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        resetFocus();
     }
 
     @Override
@@ -273,26 +297,26 @@ public class ShoppingListActivity extends BaseActivity
         switch (item.getItemId()) {
             case R.id.action_share:
                 Log.d(LOG_TAG, "Starting share activity");
-                Intent intentShare = new Intent(ShoppingListActivity.this, ShareActivity.class);
+                Intent intentShare = new Intent(GroceryListActivity.this, ShareActivity.class);
                 startActivity(intentShare);
                 break;
             case R.id.action_delete_wares:
                 ShoppingListDialog dialogDeleteAll = new ShoppingListDialog();
-                Bundle args1 = new Bundle();
-                args1.putString(ShoppingListDialog.DIALOG_TYPE, ShoppingListDialog.DELETE_ALL_WARES);
-                dialogDeleteAll.setArguments(args1);
+                Bundle argsDeleteWares = new Bundle();
+                argsDeleteWares.putString(ShoppingListDialog.DIALOG_TYPE, ShoppingListDialog.DELETE_ALL_WARES);
+                dialogDeleteAll.setArguments(argsDeleteWares);
                 dialogDeleteAll.show(mFragmentManager, "delete-all-wares");
                 break;
             case R.id.action_delete_marked:
                 ShoppingListDialog dialogDeleteMarked = new ShoppingListDialog();
-                Bundle args2 = new Bundle();
-                args2.putString(ShoppingListDialog.DIALOG_TYPE, ShoppingListDialog.DELETE_ALL_MARKED);
-                dialogDeleteMarked.setArguments(args2);
+                Bundle argsDeleteMarked = new Bundle();
+                argsDeleteMarked.putString(ShoppingListDialog.DIALOG_TYPE, ShoppingListDialog.DELETE_ALL_MARKED);
+                dialogDeleteMarked.setArguments(argsDeleteMarked);
                 dialogDeleteMarked.show(mFragmentManager, "delete-all-marked");
                 break;
             case R.id.action_login_signup:
                 Log.d(LOG_TAG, "Starting Login activity");
-                Intent intentLogin = new Intent(ShoppingListActivity.this, LoginActivity.class);
+                Intent intentLogin = new Intent(GroceryListActivity.this, LoginActivity.class);
                 startActivity(intentLogin);
                 break;
             case R.id.action_logout:
@@ -320,12 +344,18 @@ public class ShoppingListActivity extends BaseActivity
     @Override
     protected void onPause() {
         Log.d(LOG_TAG, "I am now paused");
+
+        getContentResolver().unregisterContentObserver(wareObserver);
+
         super.onPause();
     }
 
     @Override
     protected void onResume() {
-        Log.d(LOG_TAG, "I am now resumed");
+        Log.d(LOG_TAG, "I am now resumed, registering");
+
+        getContentResolver().registerContentObserver(Contract.Ware.CONTENT_URI, true, wareObserver);
+
         setActivityTitle();
         super.onResume();
     }
@@ -370,7 +400,7 @@ public class ShoppingListActivity extends BaseActivity
     }
 
     @Override
-    public void onDialogFinishes(final String DIALOG_TYPE, final boolean ANSWER) {
+    public void onOptionsDialogFinished(final String DIALOG_TYPE, final boolean ANSWER) {
         switch (DIALOG_TYPE) {
             case ShoppingListDialog.DELETE_ALL_WARES:
                 if (ANSWER) {

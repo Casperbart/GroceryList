@@ -1,7 +1,6 @@
-package com.printz.guano.shoppingassistant.share_list;
+package com.printz.guano.shoppingassistant.sharing;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,31 +17,24 @@ import com.printz.guano.shoppingassistant.BaseActivity;
 import com.printz.guano.shoppingassistant.R;
 import com.printz.guano.shoppingassistant.misc.DummyClass;
 
-import java.util.List;
-
 public class ShareActivity extends BaseActivity {
 
     private final static String LOG_TAG = ShareActivity.class.getSimpleName();
-    private ListView mFriendsList;
-    private Button mSendInvitationButton;
-    private FragmentManager mFragmentManager;
+
     private EditText mSendInvitationText;
-    private List<Friend> mFriends;
-    private ShareFriendAdapter mShareFriendAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
         activateToolbarWithHomeEnabled();
-        mFragmentManager = getSupportFragmentManager();
 
-        mShareFriendAdapter = new ShareFriendAdapter(this);
-        mFriendsList = (ListView) findViewById(R.id.listViewFriends);
-        mSendInvitationButton = (Button) findViewById(R.id.buttonSendInvitation);
+        InvitationAdapter mInvitationAdapter = new InvitationAdapter(this);
+        ListView mFriendsView = (ListView) findViewById(R.id.listViewFriends);
+        Button mSendInvitationButton = (Button) findViewById(R.id.buttonSendInvitation);
         mSendInvitationText = (EditText) findViewById(R.id.editTextSendInviation);
 
-        mFriendsList.setAdapter(mShareFriendAdapter);
+        mFriendsView.setAdapter(mInvitationAdapter);
 
         mSendInvitationText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -71,7 +63,7 @@ public class ShareActivity extends BaseActivity {
             }
         });
 
-        DummyClass.setDummyFriends(mShareFriendAdapter);
+        DummyClass.setDummyFriends(mInvitationAdapter);
     }
 
     @Override

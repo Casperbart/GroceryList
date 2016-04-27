@@ -10,4 +10,8 @@
     <color name="colorToolbarPrimaryText">@color/md_white_1000</color>
     <color name="colorToolbarSecondayText">@color/md_white_1000</color>
     <color name="colorMarked">@color/md_grey_500</color>
+    
+    <!-- Button color button_selector -->
+    <color name="button_pressed">@color/md_cyan_100</color>
+    <color name="button_focused">@color/md_cyan_50</color>
 </resources>

@@ -7,11 +7,10 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.printz.guano.shoppingassistant.UserSession;
-import com.printz.guano.shoppingassistant.edit_list.Ware;
-import com.printz.guano.shoppingassistant.edit_list.WareHistory;
+import com.printz.guano.shoppingassistant.grocery_list.Ware;
+import com.printz.guano.shoppingassistant.grocery_list.WareHistory;
 
 import java.util.List;
-import java.util.Map;
 
 public class DatabaseLib {
 
@@ -23,56 +22,61 @@ public class DatabaseLib {
         this.mContentResolver = contenResolver;
     }
 
-    public void addStandardData(String userName, String password) {
-        Uri uriUser = insertDefaultUser(userName, password);
-        String userId = UserContract.User.getUserId(uriUser);
-
-        insertDefaultShoppingList(userId);
-    }
-
-    private Uri insertDefaultUser(String userName, String password) {
+    public Uri insertUser(String userId, String userName) {
         ContentValues values = new ContentValues();
-        values.put(UserContract.UserColumns.USERNAME, userName);
-        values.put(UserContract.UserColumns.PASSWORD, password);
-        return mContentResolver.insert(UserContract.TABLE_URI, values);
+        values.put(Contract.UserColumns.U_ID, userId);
+        values.put(Contract.UserColumns.USERNAME, userName);
+        return mContentResolver.insert(Contract.User.CONTENT_URI, values);
     }
 
-    private Uri insertDefaultShoppingList(String userId) {
-        ContentValues values = new ContentValues();
-        values.put(ShoppingListContract.ShoppingListColumns.USER_ID, userId);
-        return mContentResolver.insert(ShoppingListContract.TABLE_URI, values);
-    }
+    public boolean isExistingUser(String userName) {
+        String[] projection = {Contract.UserColumns.USERNAME };
+        String selection = Contract.UserColumns.USERNAME + "=?";
+        String[] selectionArgs = { userName };
 
-    public String getUserId() {
-        UserSession userSession = UserSession.getUserSession();
-        if (!userSession.isSessionActive()) { // only called on active user, should always fail
-            return "1";
+        Cursor cursor = mContentResolver.query(Contract.User.CONTENT_URI, projection, selection, selectionArgs, null);
+        boolean exists = false;
+
+        if(cursor != null) {
+            exists = cursor.getCount() > 0;
+            cursor.close();
         }
 
-        // user is logged in find non default id
-        Map<String, String> credentials = userSession.getCredentials();
-        String userName = credentials.get(UserSession.USERNAME);
+        return exists;
+    }
+
+    private String getUserId() {
+        UserSession userSession = UserSession.getUserSession();
+
+        if (!userSession.isSessionActive()) {
+            return "1"; // default user ID
+        }
+
+        // user is logged, get username
+        String userName = userSession.getUserName();
 
         String[] projection = {
-                UserContract.UserColumns.U_ID
+                Contract.UserColumns.U_ID
         };
 
-        String selection = UserContract.UserColumns.USERNAME + "=?";
+        String selection = Contract.UserColumns.USERNAME + "=?";
 
         String[] selectionArgs = {
                 userName
         };
 
-        Cursor cursor = mContentResolver.query(UserContract.TABLE_URI, projection, selection, selectionArgs, null);
+        Cursor cursor = mContentResolver.query(Contract.User.CONTENT_URI, projection, selection, selectionArgs, null);
 
         int userId = 0;
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    userId = cursor.getInt(cursor.getColumnIndex(UserContract.UserColumns.U_ID));
+                    userId = cursor.getInt(cursor.getColumnIndex(Contract.UserColumns.U_ID));
                 } while (cursor.moveToNext());
             }
+
+            cursor.close();
         }
 
         return String.valueOf(userId);
@@ -89,11 +93,11 @@ public class DatabaseLib {
         String userId = getUserId();
 
         ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_NAME, wareHistory.getName());
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
-        values.put(WareHistoryContract.WareHistoryColumns.USER_ID, userId);
+        values.put(Contract.WareHistoryColumns.WARE_HISTORY_NAME, wareHistory.getName());
+        values.put(Contract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
+        values.put(Contract.WareHistoryColumns.USER_ID, userId);
 
-        return mContentResolver.insert(WareHistoryContract.TABLE_URI, values);
+        return mContentResolver.insert(Contract.WareHistory.CONTENT_URI, values);
     }
 
     /**
@@ -103,10 +107,10 @@ public class DatabaseLib {
      * @return Returns the number of updated WareHistories
      */
     public int updateWareHistory(WareHistory wareHistory) {
-        Uri uri = WareHistoryContract.WareHistory.buildWareHistoryUri(String.valueOf(wareHistory.getId()));
+        Uri uri = Contract.WareHistory.buildWareHistoryUri(String.valueOf(wareHistory.getId()));
 
         ContentValues values = new ContentValues();
-        values.put(WareHistoryContract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
+        values.put(Contract.WareHistoryColumns.WARE_HISTORY_COUNT, wareHistory.getCount());
 
         return mContentResolver.update(uri, values, null, null);
     }
@@ -137,13 +141,14 @@ public class DatabaseLib {
         String userId = getUserId();
 
         ContentValues values = new ContentValues();
-        values.put(WareContract.WareColumns.WARE_NAME, ware.getName());
-        values.put(WareContract.WareColumns.WARE_POSITION, ware.getPosition());
-        values.put(WareContract.WareColumns.WARE_IS_MARKED, ware.isMarked());
-        values.put(WareContract.WareColumns.WARE_QUANTITY_TYPE, ware.getQuantityType());
-        values.put(WareContract.WareColumns.WARE_AMOUNT, ware.getAmount());
-        values.put(WareContract.WareColumns.SHOPPING_LIST_ID, userId);
-        return mContentResolver.insert(WareContract.TABLE_URI, values);
+        values.put(Contract.WareColumns.WARE_NAME, ware.getName());
+        values.put(Contract.WareColumns.WARE_POSITION, ware.getPosition());
+        values.put(Contract.WareColumns.WARE_IS_MARKED, ware.isMarked());
+        values.put(Contract.WareColumns.WARE_AMOUNT, ware.getAmount());
+        values.put(Contract.WareColumns.WARE_QUANTITY_TYPE, ware.getType());
+        values.put(Contract.WareColumns.USER_ID, userId);
+
+        return mContentResolver.insert(Contract.Ware.CONTENT_URI, values);
     }
 
     /**
@@ -153,30 +158,19 @@ public class DatabaseLib {
      * @return The number of wares deleted
      */
     public int deleteWare(Ware ware) {
-        Uri uri = WareContract.Ware.buildWareUri(String.valueOf(ware.getId()));
+        Uri uri = Contract.Ware.buildWareUri(String.valueOf(ware.getId()));
         return mContentResolver.delete(uri, null, null);
     }
 
-    /**
-     * Updates the wares in the database.
-     * @param wares The list of wares to update.
-     * @return Returns the amount of wares updated. It should match the size of the input list.
-     */
-    public int updateWares(List<Ware> wares) {
-        int updateCount = 0;
+    public int updateWare(Ware ware) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.WareColumns.WARE_NAME, ware.getName());
+        values.put(Contract.WareColumns.WARE_POSITION, ware.getPosition());
+        values.put(Contract.WareColumns.WARE_IS_MARKED, ware.isMarked());
+        values.put(Contract.WareColumns.WARE_QUANTITY_TYPE, ware.getType());
+        values.put(Contract.WareColumns.WARE_AMOUNT, ware.getAmount());
 
-        for(Ware ware : wares) {
-            ContentValues values = new ContentValues();
-            values.put(WareContract.WareColumns.WARE_NAME, ware.getName());
-            values.put(WareContract.WareColumns.WARE_POSITION, ware.getPosition());
-            values.put(WareContract.WareColumns.WARE_IS_MARKED, ware.isMarked());
-            values.put(WareContract.WareColumns.WARE_QUANTITY_TYPE, ware.getQuantityType());
-            values.put(WareContract.WareColumns.WARE_AMOUNT, ware.getAmount());
-
-            Uri uri = WareContract.Ware.buildWareUri(String.valueOf(ware.getId()));
-            updateCount += mContentResolver.update(uri, values, null, null);
-        }
-
-        return updateCount;
+        Uri uri = Contract.Ware.buildWareUri(String.valueOf(ware.getId()));
+        return mContentResolver.update(uri, values, null, null);
     }
 }

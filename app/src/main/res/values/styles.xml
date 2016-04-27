@@ -25,6 +25,15 @@
         <item name="android:textSize">18sp</item>
     </style>
 
+    <style name="LoginButtonStyle" >
+        <item name="android:minHeight">40dip</item>
+        <item name="android:minWidth">64dip</item>
+    </style>
+    
+    <style name="SignUpButtonStyle" parent="LoginButtonStyle">
+        <item name="android:borderlessButtonStyle">?android:attr/borderlessButtonStyle</item>
+    </style>
+
     <style name="Theme.Shopping.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Shopping.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">

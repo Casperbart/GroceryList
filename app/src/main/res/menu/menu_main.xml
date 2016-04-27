@@ -9,7 +9,7 @@
         android:orderInCategory="1"
         android:title="@string/share_shoppinglist_title"
         android:visible="false"
-        Shopping:showAsAction="always" />
+        Shopping:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_delete_wares"

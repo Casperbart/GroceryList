@@ -4,10 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.printz.guano.shoppingassistant.edit_list.ShoppingListActivity;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.printz.guano.shoppingassistant.grocery_list.GroceryListActivity;
 
 public class UserSession {
 
@@ -20,14 +17,13 @@ public class UserSession {
     /**
      * Key definitions of user credentials for shared preferences
      */
-    public static final String USERNAME = "username";
-    public static final String PASSWORD = "password";
+    private static final String USERNAME = "username";
     private static final String IS_SESSION_ACTIVE = "is_session_active";
 
     /**
      * Key definitions of database keys
      */
-    public static final String USER_ID = "user_id";
+    private static final String USER_ID = "user_id";
 
     /**
      * Key to retrieve user credentials preferences
@@ -49,7 +45,7 @@ public class UserSession {
      */
     private static Context mContext;
 
-    private static UserSession instance;
+    private static UserSession sInstance;
 
     private UserSession() {
     }
@@ -61,47 +57,37 @@ public class UserSession {
      */
     public static void initializeUserSession(Context context) {
         mContext = context;
-        sSharedPreferences = context.getSharedPreferences(PREFERENCE, context.MODE_PRIVATE);
+        sSharedPreferences = context.getSharedPreferences(PREFERENCE, Context.MODE_PRIVATE);
         sEditor = sSharedPreferences.edit();
     }
 
     public static UserSession getUserSession() {
-        if (instance != null) {
-            return instance;
+        if (sInstance != null) {
+            return sInstance;
         }
-        instance = new UserSession();
-        return instance;
+        sInstance = new UserSession();
+        return sInstance;
     }
 
     /**
      * Saves username & password in SharedPreferences
      *
      * @param username String username
-     * @param password String password
+     * @param userId int database userId
      */
-    public void createSession(String username, String password) {
-        // session is now active
+    public void createSession(String userId, String username) {
         sEditor.putBoolean(IS_SESSION_ACTIVE, true);
-
         sEditor.putString(USERNAME, username);
-        sEditor.putString(PASSWORD, password);
-
-        // commit changes to shared preferences
+        sEditor.putString(USER_ID, userId);
         sEditor.commit();
 
         triggerOnSessionChange();
     }
 
-    public void setDatabaseIds(String userId) {
-        sEditor.putString(USER_ID, userId);
-
-        sEditor.commit();
-    }
-
     private void triggerOnSessionChange() {
         Log.d(LOG_TAB, "Session changed");
-        if (mContext instanceof ShoppingListActivity) {
-            ((ShoppingListActivity) mContext).onSessionChanged();
+        if (mContext instanceof GroceryListActivity) {
+            ((GroceryListActivity) mContext).onSessionChanged();
         }
     }
 
@@ -113,24 +99,6 @@ public class UserSession {
         sEditor.commit();
 
         triggerOnSessionChange();
-    }
-
-    /**
-     * This returns username & password in a map
-     *
-     * @return user credentials map
-     */
-    public Map<String, String> getCredentials() {
-
-        Map<String, String> userCredentials = new HashMap<>();
-
-        String username = sSharedPreferences.getString(USERNAME, null);
-        String password = sSharedPreferences.getString(PASSWORD, null);
-
-        userCredentials.put(USERNAME, username);
-        userCredentials.put(PASSWORD, password);
-
-        return userCredentials;
     }
 
     public String getUserName() {

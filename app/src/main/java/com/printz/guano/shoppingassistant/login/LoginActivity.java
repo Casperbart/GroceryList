@@ -1,8 +1,5 @@
 package com.printz.guano.shoppingassistant.login;
 
-import android.app.LoaderManager;
-import android.content.ContentResolver;
-import android.content.Loader;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -17,43 +14,39 @@ import android.widget.TextView;
 
 import com.printz.guano.shoppingassistant.BaseActivity;
 import com.printz.guano.shoppingassistant.R;
+import com.printz.guano.shoppingassistant.RestClient;
 import com.printz.guano.shoppingassistant.UserSession;
 import com.printz.guano.shoppingassistant.database.DatabaseLib;
 
-import java.util.List;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.HttpURLConnection;
 
 /**
  * A login screen that offers login via username/password.
  */
-public class LoginActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<List<User>> {
+public class LoginActivity extends BaseActivity {
 
     private static final String LOG_TAG = LoginActivity.class.getSimpleName();
 
     private DatabaseLib mLocalDbLib;
 
     /**
-     * A authentication store containing known user names and passwords.
-     */
-    private List<User> mUsers;
-
-    /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
-
-    private ContentResolver mContentResolver;
+    private UserAuthenticationTask mAuthTask = null;
 
     // UI references.
     private EditText mUsernameView;
     private EditText mPasswordView;
 
-    /**
-     * Credential sanitation variables
-     */
-    private final int MIN_PASSWORD_LENGTH = 5;
-    private final int MIN_USERNAME_LENGTH = 5;
-    private final int MAX_PASSWORD_LENGTH = 100;
-    private final int MAX_USERNAME_LENGTH = 100;
+    enum AuthenticationStatus {
+        REGISTER_OK, REGISTER_USERNAME_EXISTS, LOGIN_OK,
+        LOGIN_WRONG_USERNAME, LOGIN_WRONG_PASSWORD, SERVER_ERROR, UNHANDLED_ERROR
+    }
+
+    enum AuthenticationType {REGISTER, LOGIN}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +54,7 @@ public class LoginActivity extends BaseActivity implements LoaderManager.LoaderC
         setContentView(R.layout.activity_login);
         activateToolbarWithHomeEnabled();
 
-        mContentResolver = getContentResolver();
-
-        mLocalDbLib = new DatabaseLib(mContentResolver);
+        mLocalDbLib = new DatabaseLib(getContentResolver());
 
         mUsernameView = (EditText) findViewById(R.id.username);
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -81,44 +72,29 @@ public class LoginActivity extends BaseActivity implements LoaderManager.LoaderC
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.username_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+        Button signUpButton = (Button) findViewById(R.id.buttonSignUp);
+        signUpButton.setOnClickListener(new OnClickListener() {
             @Override
-            public void onClick(View view) {
-                attemptLogin();
+            public void onClick(View v) {
+                attemptAuthentication(AuthenticationType.REGISTER);
             }
         });
 
-        populateExistingUsers();
-    }
-
-    private void populateExistingUsers() {
-        Log.d(LOG_TAG, "Populating existing users");
-        getLoaderManager().initLoader(UserLoader.LOADER_ID, null, this);
-    }
-
-    @Override
-    public Loader<List<User>> onCreateLoader(int id, Bundle args) {
-        return new UserLoader(this, mContentResolver);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<User>> loader, List<User> users) {
-        Log.d(LOG_TAG, "Finished loading users");
-        mUsers = users;
-    }
-
-    @Override
-    public void onLoaderReset(Loader<List<User>> loader) {
-
+        Button loginButton = (Button) findViewById(R.id.buttonLogIn);
+        loginButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                attemptAuthentication(AuthenticationType.LOGIN);
+            }
+        });
     }
 
     /**
-     * Attempts to sign in or register the account specified by the login form.
+     * Attempts to sign in the account specified by the authenticaion form.
      * If there are form errors (invalid username, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void attemptLogin() {
+    private void attemptAuthentication(AuthenticationType authenticationType) {
         if (mAuthTask != null) {
             return;
         }
@@ -134,132 +110,250 @@ public class LoginActivity extends BaseActivity implements LoaderManager.LoaderC
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
-        if (TextUtils.isEmpty(password)) {
-            mPasswordView.setError(getString(R.string.error_field_required));
-            focusView = mPasswordView;
-            cancel = true;
-        } else if (!isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        } else if (!isPasswordCorrectLength(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid username
-        if (TextUtils.isEmpty(username)) {
-            mUsernameView.setError(getString(R.string.error_field_required));
-            focusView = mUsernameView;
-            cancel = true;
-        } else if (!isUsernameValid(username)) {
-            mUsernameView.setError(getString(R.string.error_invalid_username));
-            focusView = mUsernameView;
-            cancel = true;
-        } else if (!isUsernameCorrectLength(username)) {
-            mUsernameView.setError(getString(R.string.error_username_length));
-            focusView = mUsernameView;
-            cancel = true;
-        }
+        FormValidator formValidator = new FormValidator(username, password, cancel, focusView);
+        formValidator.validate();
+        cancel = formValidator.isCancel();
+        focusView = formValidator.getFocusView();
 
         if (cancel) {
             focusView.requestFocus();
         } else {
-            // Kick off a background task to perform the user login attempt.
-            mAuthTask = new UserLoginTask(username, password);
+            // Kick off a background task to perform the user authentication.
+            mAuthTask = new UserAuthenticationTask(authenticationType, username, password);
             mAuthTask.execute((Void) null);
         }
-    }
-
-    private boolean isUsernameValid(String username) {
-        if (TextUtils.getTrimmedLength(username) != username.length()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isUsernameCorrectLength(String username) {
-        if (username.length() < MIN_USERNAME_LENGTH || username.length() > MAX_USERNAME_LENGTH) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isPasswordValid(String password) {
-        if (TextUtils.getTrimmedLength(password) != password.length()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean isPasswordCorrectLength(String password) {
-        if (password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class UserAuthenticationTask extends AsyncTask<Void, Void, AuthenticationStatus> {
 
         private final String mUsername;
         private final String mPassword;
 
-        UserLoginTask(String username, String password) {
+        // rest client to call authentication service
+        private final RestClient mRestClient;
+
+        // authentication type, either login or sign up, to perform
+        private final AuthenticationType mAuthenticationType;
+
+        UserAuthenticationTask(AuthenticationType authenticationType, String username, String password) {
+            mAuthenticationType = authenticationType;
             mUsername = username;
             mPassword = password;
+            mRestClient = new RestClient();
         }
 
         @Override
-        protected Boolean doInBackground(Void... params) {
-            boolean isExistingUser = false;
+        protected AuthenticationStatus doInBackground(Void... params) {
 
-            for (User user : mUsers) {
-                if (mUsername.equals(user.getUserName())) {
-                    // Account exists, return true if the password matches.
-                    isExistingUser = mPassword.equals(user.getPassword());
-                    if (isExistingUser) {
-                        Log.d(LOG_TAG, "Logged in as " + mUsername);
-                    }
-                    return isExistingUser;
-                }
+            switch (mAuthenticationType) {
+                case REGISTER:
+                    return register();
+                case LOGIN:
+                    return login();
+                default:
+                    // this should never happen, its actually impossible.. I think
+                    return AuthenticationStatus.UNHANDLED_ERROR;
+            }
+        }
+
+        private AuthenticationStatus login() {
+            mRestClient.setRoute(RestClient.LOGIN);
+            mRestClient.addBodyParam("username", mUsername);
+            mRestClient.addBodyParam("password", mPassword);
+
+            int responseCode = 0;
+
+            try {
+                responseCode = mRestClient.executePost();
+            } catch (Exception e) {
+                // do noting m9!
             }
 
-            Log.d(LOG_TAG, "Created a new account as " + mUsername);
-            // new user, add standard data: user and shopping list to database
-            mLocalDbLib.addStandardData(mUsername, mPassword);
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                return AuthenticationStatus.LOGIN_OK;
+            } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
+                return AuthenticationStatus.LOGIN_WRONG_USERNAME;
+            } else if (responseCode == HttpURLConnection.HTTP_FORBIDDEN) {
+                return AuthenticationStatus.LOGIN_WRONG_PASSWORD;
+            } else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+                return AuthenticationStatus.SERVER_ERROR;
+            } else {
+                return AuthenticationStatus.UNHANDLED_ERROR;
+            }
+        }
 
-            return true;
+        private AuthenticationStatus register() {
+            mRestClient.setRoute(RestClient.REGISTER);
+            mRestClient.addBodyParam("username", mUsername);
+            mRestClient.addBodyParam("password", mPassword);
+
+            int responseCode = 0;
+
+            try {
+                responseCode = mRestClient.executePost();
+            } catch (Exception e) {
+                // do noting m9!
+            }
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                return AuthenticationStatus.REGISTER_OK;
+            } else if (responseCode == HttpURLConnection.HTTP_CONFLICT) {
+                return AuthenticationStatus.REGISTER_USERNAME_EXISTS;
+            } else if (responseCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+                return AuthenticationStatus.SERVER_ERROR;
+            } else {
+                return AuthenticationStatus.UNHANDLED_ERROR;
+            }
         }
 
         @Override
-        protected void onPostExecute(final Boolean success) {
+        protected void onPostExecute(final AuthenticationStatus status) {
             mAuthTask = null;
 
-            if (success) {
+            switch (status) {
+                case LOGIN_OK:
+                    Log.d(LOG_TAG, "Logged in as " + mUsername);
+                    startSession();
+                    finish();
+                    break;
+                case REGISTER_OK:
+                    Log.d(LOG_TAG, "Created a new account as " + mUsername);
+                    startSession();
+                    finish();
+                    break;
+                case LOGIN_WRONG_PASSWORD:
+                    mPasswordView.setError(getString(R.string.auth_wrong_password));
+                    mPasswordView.requestFocus();
+                    break;
+                case LOGIN_WRONG_USERNAME:
+                    mUsernameView.setError(getString(R.string.auth_username_does_not_exist));
+                    mUsernameView.requestFocus();
+                    break;
+                case REGISTER_USERNAME_EXISTS:
+                    mUsernameView.setError(getString(R.string.auth_username_already_exists));
+                    mUsernameView.requestFocus();
+                    break;
+                case SERVER_ERROR:
+                    mUsernameView.setError(getString(R.string.auth_server_error));
+                    mUsernameView.requestFocus();
+                    break;
+                case UNHANDLED_ERROR:
+                    mUsernameView.setError(getString(R.string.auth_unknown_error));
+                    mUsernameView.requestFocus();
+                    break;
+                default:
+                    // something went wrong
+                    break;
+            }
+        }
+
+        private void startSession() {
+            JSONObject readData = mRestClient.getResponseBody();
+
+            try {
+                String userId = readData.getString("uId");
+                String username = readData.getString("username");
+
+                if (!mLocalDbLib.isExistingUser(username)) {
+                    mLocalDbLib.insertUser(userId, username);
+                }
                 UserSession userSession = UserSession.getUserSession();
-                userSession.createSession(mUsername, mPassword);
-                String userId = mLocalDbLib.getUserId();
-                userSession.setDatabaseIds(userId);
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                userSession.createSession(userId, username);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
 
         @Override
         protected void onCancelled() {
             mAuthTask = null;
+        }
+    }
+
+    private class FormValidator {
+
+        /**
+         * Credential sanitation variables
+         */
+        private final int MIN_PASSWORD_LENGTH = 5;
+        private final int MIN_USERNAME_LENGTH = 5;
+        private final int MAX_PASSWORD_LENGTH = 100;
+        private final int MAX_USERNAME_LENGTH = 100;
+
+        private String username;
+        private String password;
+        private boolean cancel;
+        private View focusView;
+
+        public FormValidator(String username, String password, boolean cancel, View focusView) {
+            this.username = username;
+            this.password = password;
+            this.cancel = cancel;
+            this.focusView = focusView;
+        }
+
+        public boolean isCancel() {
+            return cancel;
+        }
+
+        public View getFocusView() {
+            return focusView;
+        }
+
+        public void validate() {
+            // Check for a valid password, if the user entered one.
+            if (TextUtils.isEmpty(password)) {
+                mPasswordView.setError(getString(R.string.error_field_required));
+                focusView = mPasswordView;
+                cancel = true;
+            } else if (!isPasswordValid(password)) {
+                mPasswordView.setError(getString(R.string.error_invalid_password));
+                focusView = mPasswordView;
+                cancel = true;
+            } else if (!isPasswordCorrectLength(password)) {
+                mPasswordView.setError(getString(R.string.error_password_length));
+                focusView = mPasswordView;
+                cancel = true;
+            }
+
+            // Check for a valid username
+            if (TextUtils.isEmpty(username)) {
+                mUsernameView.setError(getString(R.string.error_field_required));
+                focusView = mUsernameView;
+                cancel = true;
+            } else if (!isUsernameValid(username)) {
+                mUsernameView.setError(getString(R.string.error_invalid_username));
+                focusView = mUsernameView;
+                cancel = true;
+            } else if (!isUsernameCorrectLength(username)) {
+                mUsernameView.setError(getString(R.string.error_username_length));
+                focusView = mUsernameView;
+                cancel = true;
+            }
+        }
+
+        private boolean isPasswordValid(String password) {
+            return TextUtils.getTrimmedLength(password) == password.length();
+
+        }
+
+        private boolean isPasswordCorrectLength(String password) {
+            return !(password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH);
+
+        }
+
+        private boolean isUsernameValid(String username) {
+            return TextUtils.getTrimmedLength(username) == username.length();
+
+        }
+
+        private boolean isUsernameCorrectLength(String username) {
+            return !(username.length() < MIN_USERNAME_LENGTH || username.length() > MAX_USERNAME_LENGTH);
+
         }
     }
 }

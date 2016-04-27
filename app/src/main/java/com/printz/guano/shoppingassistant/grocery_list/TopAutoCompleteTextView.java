@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.content.Context;
 import android.util.AttributeSet;

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="120dp"
+    android:layout_height="60dp">
+
+    <ListView
+        android:id="@+id/listViewAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/viewPickerSeparator"
+        android:scrollbars="none" />
+
+    <View
+        android:id="@+id/viewPickerSeparator"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:background="@color/colorPrimaryDark" />
+
+    <ListView
+        android:id="@+id/listViewType"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@id/viewPickerSeparator"
+        android:scrollbars="none" />
+
+</RelativeLayout>

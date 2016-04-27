@@ -1,4 +1,4 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
@@ -7,12 +7,12 @@ import android.database.Cursor;
 import android.util.Log;
 
 import com.printz.guano.shoppingassistant.UserSession;
-import com.printz.guano.shoppingassistant.database.WareContract;
+import com.printz.guano.shoppingassistant.database.Contract;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WareLoader extends AsyncTaskLoader<List<Ware>> {
+class WareLoader extends AsyncTaskLoader<List<Ware>> {
 
     private static final String LOG_TAG = WareLoader.class.getSimpleName();
 
@@ -33,15 +33,15 @@ public class WareLoader extends AsyncTaskLoader<List<Ware>> {
         List<Ware> entries = new ArrayList<>();
 
         String[] projection = {
-                WareContract.WareColumns.W_ID,
-                WareContract.WareColumns.WARE_NAME,
-                WareContract.WareColumns.WARE_POSITION,
-                WareContract.WareColumns.WARE_IS_MARKED,
-                WareContract.WareColumns.WARE_QUANTITY_TYPE,
-                WareContract.WareColumns.WARE_AMOUNT
+                Contract.WareColumns.W_ID,
+                Contract.WareColumns.WARE_NAME,
+                Contract.WareColumns.WARE_POSITION,
+                Contract.WareColumns.WARE_IS_MARKED,
+                Contract.WareColumns.WARE_QUANTITY_TYPE,
+                Contract.WareColumns.WARE_AMOUNT
         };
 
-        String selection = WareContract.WareColumns.SHOPPING_LIST_ID + "=?";
+        String selection = Contract.WareColumns.USER_ID + "=?";
 
         String userId = "1"; // default user
 
@@ -55,22 +55,24 @@ public class WareLoader extends AsyncTaskLoader<List<Ware>> {
                 userId
         };
 
-        mCursor = mContentResolver.query(WareContract.TABLE_URI, projection, selection, selectionArgs, null);
+        mCursor = mContentResolver.query(Contract.Ware.CONTENT_URI, projection, selection, selectionArgs, null);
 
         if (mCursor != null) {
             if (mCursor.moveToFirst()) {
                 do {
-                    int id = mCursor.getInt(mCursor.getColumnIndex(WareContract.WareColumns.W_ID));
-                    String name = mCursor.getString(mCursor.getColumnIndex(WareContract.WareColumns.WARE_NAME));
-                    int position = mCursor.getInt(mCursor.getColumnIndex(WareContract.WareColumns.WARE_POSITION));
-                    boolean isMarked = mCursor.getInt(mCursor.getColumnIndex(WareContract.WareColumns.WARE_IS_MARKED)) == 0 ? false : true;
-                    String type = mCursor.getString(mCursor.getColumnIndex(WareContract.WareColumns.WARE_QUANTITY_TYPE));
-                    String amount = mCursor.getString(mCursor.getColumnIndex(WareContract.WareColumns.WARE_AMOUNT));
+                    int id = mCursor.getInt(mCursor.getColumnIndex(Contract.WareColumns.W_ID));
+                    String name = mCursor.getString(mCursor.getColumnIndex(Contract.WareColumns.WARE_NAME));
+                    int position = mCursor.getInt(mCursor.getColumnIndex(Contract.WareColumns.WARE_POSITION));
+                    boolean isMarked = mCursor.getInt(mCursor.getColumnIndex(Contract.WareColumns.WARE_IS_MARKED)) != 0;
+                    String type = mCursor.getString(mCursor.getColumnIndex(Contract.WareColumns.WARE_QUANTITY_TYPE));
+                    String amount = mCursor.getString(mCursor.getColumnIndex(Contract.WareColumns.WARE_AMOUNT));
 
                     Ware ware = new Ware(id, name, position, isMarked, type, amount);
                     entries.add(ware);
                 } while (mCursor.moveToNext());
             }
+
+            mCursor.close();
         }
 
         return entries;

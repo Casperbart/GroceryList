@@ -1,11 +1,12 @@
-package com.printz.guano.shoppingassistant.edit_list;
+package com.printz.guano.shoppingassistant.grocery_list;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 public class Ware implements Comparable<Ware>, Parcelable {
 
-    private int wId;
+    private int mWareId;
     private String mName;
 
     /**
@@ -25,8 +26,8 @@ public class Ware implements Comparable<Ware>, Parcelable {
      */
     private String mAmount;
 
-    public Ware(int wId, String name, int position, boolean isMarked, String type, String amount) {
-        this.wId = wId;
+    public Ware(int mWareId, String name, int position, boolean isMarked, String type, String amount) {
+        this.mWareId = mWareId;
         this.mName = name;
         this.mPosition = position;
         this.mIsMarked = isMarked;
@@ -34,17 +35,17 @@ public class Ware implements Comparable<Ware>, Parcelable {
         this.mAmount = amount;
     }
 
-    public Ware(Parcel in) {
+    private Ware(Parcel in) {
         this.mName = in.readString();
         this.mIsMarked = in.readInt() == 1;
     }
 
     public int getId() {
-        return wId;
+        return mWareId;
     }
 
     public void setId(int id) {
-        this.wId = id;
+        this.mWareId = id;
     }
 
     public String getName() {
@@ -71,14 +72,6 @@ public class Ware implements Comparable<Ware>, Parcelable {
         this.mIsMarked = marked;
     }
 
-    public String getQuantityType() {
-        return mQuantityType;
-    }
-
-    public void setQuantityType(String type) {
-        this.mQuantityType = type;
-    }
-
     public String getAmount() {
         return mAmount;
     }
@@ -87,8 +80,20 @@ public class Ware implements Comparable<Ware>, Parcelable {
         this.mAmount = amount;
     }
 
+    public String getType() {
+        return mQuantityType;
+    }
+
+    public void setType(String type) {
+        this.mQuantityType = type;
+    }
+
+    public boolean isAmountSet() {
+        return !mAmount.equals("-");
+    }
+
     @Override
-    public int compareTo(Ware another) {
+    public int compareTo(@NonNull Ware another) {
         return this.getPosition() - another.getPosition();
     }
 
@@ -99,7 +104,7 @@ public class Ware implements Comparable<Ware>, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(wId);
+        dest.writeInt(mWareId);
         dest.writeString(mName);
         dest.writeInt(mPosition);
         dest.writeInt(mIsMarked ? 1 : 0);

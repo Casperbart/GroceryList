@@ -1,14 +1,12 @@
 package com.printz.guano.shoppingassistant;
 
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-/**
- * Created by guano on 29/02/16.
- */
 public class BaseActivity extends AppCompatActivity {
 
-    Toolbar mToolbar;
+    private Toolbar mToolbar;
 
     protected Toolbar activateToolbar() {
         if(mToolbar == null) {
@@ -24,7 +22,10 @@ public class BaseActivity extends AppCompatActivity {
     protected Toolbar activateToolbarWithHomeEnabled() {
         activateToolbar();
         if(mToolbar != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            ActionBar actionBar = getSupportActionBar();
+            if(actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
         }
 
         return mToolbar;

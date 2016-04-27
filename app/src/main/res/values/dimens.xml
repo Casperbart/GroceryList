@@ -11,7 +11,7 @@
     <dimen name="editTextSize">20sp</dimen>
     <dimen name="dialogTextSize">22sp</dimen>
     <dimen name="loginscreentitle">26sp</dimen>
-    <dimen name="loginscreenlabels">18dp</dimen>
+    <dimen name="loginscreenlabels">18sp</dimen>
 
 
     <!-- Dimensions related to autocomplete dropdown -->
@@ -21,7 +21,7 @@
     <dimen name="dropDownTextSize">20sp</dimen>
 
     <!-- Dimensions related to popup picker -->
-    <dimen name="popupPickedHeight">300dp</dimen>
-    <dimen name="popupPickedWidth">120dp</dimen>
+    <dimen name="dialogQuantityHeight">60dp</dimen>
+    <dimen name="dialogQuantityWidth">120dp</dimen>
 
 </resources>

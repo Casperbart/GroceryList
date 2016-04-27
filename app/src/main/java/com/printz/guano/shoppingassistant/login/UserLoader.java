@@ -1,18 +1,18 @@
 package com.printz.guano.shoppingassistant.login;
 
+import android.content.AsyncTaskLoader;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.content.AsyncTaskLoader;
 import android.util.Log;
 
-import com.printz.guano.shoppingassistant.edit_list.WareHistoryLoader;
-import com.printz.guano.shoppingassistant.database.UserContract;
+import com.printz.guano.shoppingassistant.database.Contract;
+import com.printz.guano.shoppingassistant.grocery_list.WareHistoryLoader;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserLoader extends AsyncTaskLoader<List<User>> {
+class UserLoader extends AsyncTaskLoader<List<User>> {
 
     private final static String LOG_TAG = WareHistoryLoader.class.getSimpleName();
     private List<User> mUsers;
@@ -28,25 +28,25 @@ public class UserLoader extends AsyncTaskLoader<List<User>> {
     @Override
     public List<User> loadInBackground() {
         String[] projection = {
-                UserContract.UserColumns.U_ID,
-                UserContract.UserColumns.USERNAME,
-                UserContract.UserColumns.PASSWORD
+                Contract.UserColumns.U_ID,
+                Contract.UserColumns.USERNAME,
         };
 
         List<User> entries = new ArrayList<>();
 
-        mCursor = mContentResolver.query(UserContract.TABLE_URI, projection, null, null, null);
+        mCursor = mContentResolver.query(Contract.User.CONTENT_URI, projection, null, null, null);
 
         if (mCursor != null) {
             if (mCursor.moveToFirst()) {
                 do {
-                    int id = mCursor.getInt(mCursor.getColumnIndex(UserContract.UserColumns.U_ID));
-                    String userName = mCursor.getString(mCursor.getColumnIndex(UserContract.UserColumns.USERNAME));
-                    String password = mCursor.getString(mCursor.getColumnIndex(UserContract.UserColumns.PASSWORD));
-                    User user = new User(id, userName, password);
+                    int id = mCursor.getInt(mCursor.getColumnIndex(Contract.UserColumns.U_ID));
+                    String userName = mCursor.getString(mCursor.getColumnIndex(Contract.UserColumns.USERNAME));
+                    User user = new User(id, userName);
                     entries.add(user);
                 } while (mCursor.moveToNext());
             }
+
+            mCursor.close();
         }
 
         return entries;

@@ -6,4 +6,5 @@
     android:textSize="@dimen/dropDownTextSize"
     android:textColor="@color/colorPrimaryText"
     android:paddingLeft="10dp"
+    android:paddingRight="10dp"
     android:gravity="center_vertical" />
