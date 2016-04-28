@@ -16,20 +16,20 @@ public class ShoppingLexer extends Lexer {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, COUNT=2, UNIT=3, WEIGHT=4, LENGTH=5, MISC=6, WARE=7, WS=8;
+		T__0=1, INT=2, UNIT=3, WEIGHT=4, LENGTH=5, MISC=6, WARE=7, WS=8;
 	public static String[] modeNames = {
 		"DEFAULT_MODE"
 	};
 
 	public static final String[] ruleNames = {
-		"T__0", "COUNT", "UNIT", "WEIGHT", "LENGTH", "MISC", "WARE", "WS"
+		"T__0", "INT", "UNIT", "WEIGHT", "LENGTH", "MISC", "WARE", "WS"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
 		null, "' '"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, "COUNT", "UNIT", "WEIGHT", "LENGTH", "MISC", "WARE", "WS"
+		null, null, "INT", "UNIT", "WEIGHT", "LENGTH", "MISC", "WARE", "WS"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 

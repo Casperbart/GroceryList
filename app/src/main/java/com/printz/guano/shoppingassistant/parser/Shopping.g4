@@ -1,8 +1,10 @@
 // Define grammar for shopping list parser
 grammar Shopping;
-item    : ware ' ' COUNT (' ')? UNIT | COUNT (' ')? (UNIT)? ' ' ware ;
+item    : ware ' ' amount (' ')? (unit)? | amount (' ')? (unit)? ' ' ware ;
 ware    : WARE+ (' ' ware)* ;
-COUNT   : [0-9]+ ;
+amount 	: INT ;
+unit	: UNIT;
+INT	: [0-9]+ ;
 UNIT    : WEIGHT | LENGTH | MISC ;
 
 WEIGHT  : [Kk]'g' | [Kk]'ilo' | [Gg] | [Gg]'ram' ;

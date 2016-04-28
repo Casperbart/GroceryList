@@ -34,6 +34,30 @@ public class ShoppingBaseListener implements ShoppingListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitWare(ShoppingParser.WareContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAmount(ShoppingParser.AmountContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAmount(ShoppingParser.AmountContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterUnit(ShoppingParser.UnitContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitUnit(ShoppingParser.UnitContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
